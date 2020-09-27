@@ -13,7 +13,7 @@ func (s fooBarSource) GetSchema() string {
 }
 
 func (s fooBarSource) GetURI() string {
-	return "postgresql://developer:development@localhost:5432/foobar?sslmode=disable"
+	return "postgresql://localhost:5432/foobar"
 }
 
 func (s fooBarSource) GetSchedule() string {
@@ -23,8 +23,8 @@ func (s fooBarSource) GetSchedule() string {
 func (s fooBarSource) GetData() ([]string, *map[string][]string, error) {
 	fields := []string{"foo", "bar"}
 	records := map[string][]string{
-		"1": {getRandomString(4), getRandomString(8)},
-		"2": {getRandomString(4), getRandomString(8)},
+		"1": {getRandomString(8), getRandomString(8)},
+		"2": {getRandomString(8), getRandomString(8)},
 	}
 
 	return fields, &records, nil
