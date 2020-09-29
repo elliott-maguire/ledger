@@ -6,16 +6,76 @@ import (
 	"strings"
 
 	"github.com/jmoiron/sqlx"
+	_ "github.com/lib/pq" // postgres driver
 )
+
+// WriteStore takes a database URI and schema name to write to the database.
+func WriteStore(db *sqlx.DB, schema string) error {
+	query := fmt.Sprintf("CREATE SCHEMA IF NOT EXISTS %s", schema)
+	if _, err := db.Exec(query); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// WriteRecords takes a schema name and an array of Record instances
+// and writes them to the corresponding schema.
+func WriteRecords(db *sqlx.DB, schema string, fields []string, records map[string][]string) error {
+	tx, err := db.Begin()
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	createTable := BuildCreateRecordsTableQuery(schema, fields)
+	if _, err := tx.Exec(createTable); err != nil {
+		return err
+	}
+	truncateTable := "TRUNCATE " + schema + ".records"
+	if _, err := tx.Exec(truncateTable); err != nil {
+		return err
+	}
+	insertRecords := BuildInsertRecordsQuery(schema, fields, records)
+	if _, err := tx.Exec(insertRecords); err != nil {
+		return err
+	}
+
+	if err := tx.Commit(); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// WriteChanges takes a schema name and an array of Change instances
+// and writes them to the corresponding schema.
+func WriteChanges(db *sqlx.DB, schema string, changes []Change) error {
+	tx, err := db.Begin()
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	createTable := BuildCreateChangesTableQuery(schema)
+	if _, err := tx.Exec(createTable); err != nil {
+		return err
+	}
+	insertChanges := BuildInsertChangesQuery(schema, changes)
+	if _, err := tx.Exec(insertChanges); err != nil {
+		return err
+	}
+
+	if err := tx.Commit(); err != nil {
+		return err
+	}
+
+	return nil
+}
 
 // ReadRecords pulls all of the records out of the records table
 // in a given store.
-func ReadRecords(uri string, schema string) (map[string][]string, error) {
-	db, err := sqlx.Open("postgres", uri)
-	if err != nil {
-		return nil, err
-	}
-
+func ReadRecords(db *sqlx.DB, schema string) (map[string][]string, error) {
 	query := fmt.Sprintf("SELECT * FROM %s.records", schema)
 	rows, err := db.Queryx(query)
 	if err != nil {
@@ -44,12 +104,7 @@ func ReadRecords(uri string, schema string) (map[string][]string, error) {
 
 // ReadChanges pulls all of the changes out of the changes table
 // in a given store.
-func ReadChanges(uri string, schema string) ([]Change, error) {
-	db, err := sqlx.Open("postgres", uri)
-	if err != nil {
-		return nil, err
-	}
-
+func ReadChanges(db *sqlx.DB, schema string) ([]Change, error) {
 	query := fmt.Sprintf("SELECT * FROM %s.changes", schema)
 	rows, err := db.Queryx(query)
 	if err != nil {
@@ -104,12 +159,12 @@ func ReadChanges(uri string, schema string) ([]Change, error) {
 // ReadArchive returns a copy of the given schema's records at the given time.
 // The timestamp must be in the RFC3339 format, as that is the format used for stamping
 // change sets as they are stored.
-func ReadArchive(uri string, schema string, timestamp string) (map[string][]string, error) {
-	records, err := ReadRecords(uri, schema)
+func ReadArchive(db *sqlx.DB, schema string, timestamp string) (map[string][]string, error) {
+	records, err := ReadRecords(db, schema)
 	if err != nil {
 		return nil, err
 	}
-	changes, err := ReadChanges(uri, schema)
+	changes, err := ReadChanges(db, schema)
 	if err != nil {
 		return nil, err
 	}
