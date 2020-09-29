@@ -2,13 +2,10 @@ package core
 
 import (
 	"fmt"
-	"regexp"
 	"strings"
 )
 
 var (
-	re = regexp.MustCompile("[^0-9A-Za-z_]")
-
 	createRecordsQuery = "CREATE TABLE IF NOT EXISTS %s.records (id VARCHAR,%s)"
 	insertRecordsQuery = "INSERT INTO %s.records (id,%s) VALUES %s"
 	createChangesQuery = `
@@ -28,7 +25,7 @@ var (
 func BuildCreateRecordsTableQuery(schema string, fields []string) string {
 	var values []string
 	for _, field := range fields {
-		values = append(values, re.ReplaceAllString(field, "")+" VARCHAR")
+		values = append(values, strings.ReplaceAll(field, "'", "")+" VARCHAR")
 	}
 
 	query := fmt.Sprintf(createRecordsQuery, schema, strings.Join(values, ","))
@@ -41,14 +38,14 @@ func BuildCreateRecordsTableQuery(schema string, fields []string) string {
 func BuildInsertRecordsQuery(schema string, fields []string, records map[string][]string) string {
 	var safeFields []string
 	for _, field := range fields {
-		safeFields = append(safeFields, re.ReplaceAllString(field, ""))
+		safeFields = append(safeFields, strings.ReplaceAll(field, "'", ""))
 	}
 
 	var values []string
 	for key, record := range records {
 		var cleaned []string
 		for _, cell := range record {
-			cleaned = append(cleaned, re.ReplaceAllString(cell, ""))
+			cleaned = append(cleaned, strings.ReplaceAll(cell, "'", ""))
 		}
 
 		values = append(
@@ -77,12 +74,12 @@ func BuildInsertChangesQuery(schema string, changes []Change) string {
 	for _, change := range changes {
 		cleanedPrevious := make([]string, len(change.Previous))
 		for i, cell := range change.Previous {
-			cleanedPrevious[i] = re.ReplaceAllString(cell, "")
+			cleanedPrevious[i] = strings.ReplaceAll(cell, "'", "")
 		}
 
 		cleanedNext := make([]string, len(change.Next))
 		for i, cell := range change.Next {
-			cleanedNext[i] = re.ReplaceAllString(cell, "")
+			cleanedNext[i] = strings.ReplaceAll(cell, "'", "")
 		}
 
 		values = append(
