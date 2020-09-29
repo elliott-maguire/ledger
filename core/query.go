@@ -21,7 +21,7 @@ func BuildCreateRecordsTableQuery(schema string, fields []string) string {
 
 	query := fmt.Sprintf("%s %s (id VARCHAR,%s)", command, target, strings.Join(values, ","))
 
-	return query
+	return strings.ToValidUTF8(query, "")
 }
 
 // BuildInsertRecordsQuery compiles all the value sets in a set of records
@@ -48,7 +48,7 @@ func BuildInsertRecordsQuery(schema string, fields []string, records map[string]
 		command, target, strings.Join(safeFields, ","), strings.Join(values, ","),
 	)
 
-	return query
+	return strings.ToValidUTF8(query, "")
 }
 
 // BuildCreateChangesTableQuery is another convenient hideaway so that we
@@ -61,7 +61,7 @@ func BuildCreateChangesTableQuery(schema string) string {
 
 	query := fmt.Sprintf("%s %s %s", command, target, values)
 
-	return query
+	return strings.ToValidUTF8(query, "")
 }
 
 // BuildInsertChangesQuery is yet another convenience function for hiding away
@@ -90,5 +90,5 @@ func BuildInsertChangesQuery(schema string, changes []Change) string {
 		command, target, strings.Join(values, ","),
 	)
 
-	return query
+	return strings.ToValidUTF8(query, "")
 }
