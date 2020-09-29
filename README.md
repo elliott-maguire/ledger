@@ -72,3 +72,5 @@ func main() {
 ```
 
 Each source has a schema named after it with two tables therein, `records` and `changes`. When each call happens, the existing data is compared to incoming data to evaluate for additions, modifications, and deletions. Those operations are then collected and written to `changes`, and the `records` table is truncated and re-populated with the incoming data.
+
+To retrieve a past version of a given source's data, use the `core.ReadArchive` function, which takes a URI and schema name, as well as an RFC3339 date string, and returns a `map[string][]string` with the data from that date. This is the only mechanism included in the API for traversing the change list of a given source, but can be used in numerous ways. For example, we use it on an API endpoint to pull out CSV or JSON versions of historical data.
