@@ -1,6 +1,8 @@
 package scheduler
 
 import (
+	"log"
+
 	"github.com/lib/pq"
 	"github.com/sr-revops/house/core"
 )
@@ -16,6 +18,8 @@ func NewHandler(source Source) func() {
 		if err != nil {
 			return
 		}
+
+		log.Printf("Loading: %s\n", schema)
 
 		if err := core.WriteStore(db, schema); err != nil {
 			return
@@ -42,5 +46,7 @@ func NewHandler(source Source) func() {
 				return
 			}
 		}
+
+		log.Printf("Done: %s (%d records, %d changes)", schema, len(incoming), len(changes))
 	}
 }

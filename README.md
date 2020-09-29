@@ -12,8 +12,6 @@ If you find yourself needing to keep track of changes on a given flat data set, 
 
 The prerequisites are Go and Postgres. You need the language to define your custom sources, unless you're using another tool that uses configuration files to do the same thing (that's what we do, but that bit isn't open-source), and you need Postgres to send data to.
 
-_The full example (and potentially others) can be found in `examples/foobar.go`._
-
 First thing we need to do is make a struct that we can use to implement the `scheduler.Source` interface.
 
 ```go
