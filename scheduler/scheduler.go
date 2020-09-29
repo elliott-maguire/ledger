@@ -19,5 +19,5 @@ func (s Scheduler) Start() {
 	for _, source := range s.Sources {
 		c.AddFunc(source.GetSchedule(), NewHandler(source))
 	}
-	c.Start()
+	c.Run()
 }
