@@ -24,7 +24,7 @@ func WriteStore(uri string, schema string) error {
 
 // WriteRecords takes a schema name and an array of Record instances
 // and writes them to the corresponding schema.
-func WriteRecords(uri string, schema string, fields []string, records *map[string][]string) error {
+func WriteRecords(uri string, schema string, fields []string, records map[string][]string) error {
 	db, err := sql.Open("postgres", uri)
 	if err != nil {
 		return err
@@ -58,7 +58,7 @@ func WriteRecords(uri string, schema string, fields []string, records *map[strin
 
 // WriteChanges takes a schema name and an array of Change instances
 // and writes them to the corresponding schema.
-func WriteChanges(uri string, schema string, changes *[]Change) error {
+func WriteChanges(uri string, schema string, changes []Change) error {
 	db, err := sql.Open("postgres", uri)
 	if err != nil {
 		return err

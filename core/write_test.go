@@ -25,7 +25,7 @@ func TestWriteRecords(t *testing.T) {
 		"bar": {"1", "2", "3"},
 	}
 
-	if err := WriteRecords(uri, schema, fields, &records); err != nil {
+	if err := WriteRecords(uri, schema, fields, records); err != nil {
 		t.Error(err)
 		return
 	}
@@ -45,7 +45,7 @@ func TestWriteChanges(t *testing.T) {
 	}
 
 	changes := GetChanges(current, incoming)
-	if len(*changes) != 3 {
+	if len(changes) != 3 {
 		t.Error("failed to get changes properly")
 		return
 	}

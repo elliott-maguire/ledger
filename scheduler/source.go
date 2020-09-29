@@ -5,5 +5,5 @@ type Source interface {
 	GetSchema() string
 	GetURI() string
 	GetSchedule() string
-	GetData() (fields []string, data *map[string][]string, err error)
+	GetData() (fields []string, data map[string][]string, err error)
 }

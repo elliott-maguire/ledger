@@ -26,7 +26,7 @@ func BuildCreateRecordsTableQuery(schema string, fields []string) string {
 
 // BuildInsertRecordsQuery compiles all the value sets in a set of records
 // into a single query.
-func BuildInsertRecordsQuery(schema string, fields []string, records *map[string][]string) string {
+func BuildInsertRecordsQuery(schema string, fields []string, records map[string][]string) string {
 	command := "INSERT INTO"
 	target := schema + ".records"
 
@@ -36,7 +36,7 @@ func BuildInsertRecordsQuery(schema string, fields []string, records *map[string
 	}
 
 	var values []string
-	for key, record := range *records {
+	for key, record := range records {
 		values = append(
 			values,
 			fmt.Sprintf("('%s','%s')", key, strings.Join(record, "','")),
@@ -57,7 +57,7 @@ func BuildCreateChangesTableQuery(schema string) string {
 	command := "CREATE TABLE IF NOT EXISTS"
 	target := schema + ".changes"
 
-	values := "(operation VARCHAR, current VARCHAR, incoming VARCHAR)"
+	values := "(id VARCHAR, timestamp VARCHAR, operation VARCHAR, current VARCHAR, incoming VARCHAR)"
 
 	query := fmt.Sprintf("%s %s %s", command, target, values)
 
@@ -66,25 +66,27 @@ func BuildCreateChangesTableQuery(schema string) string {
 
 // BuildInsertChangesQuery is yet another convenience function for hiding away
 // unique query building.
-func BuildInsertChangesQuery(schema string, changes *[]Change) string {
+func BuildInsertChangesQuery(schema string, changes []Change) string {
 	command := "INSERT INTO"
 	target := schema + ".changes"
 
 	var values []string
-	for _, change := range *changes {
+	for _, change := range changes {
 		values = append(
 			values,
 			fmt.Sprintf(
-				"('%d','%s','%s')",
+				"('%s','%s','%d','%s','%s')",
+				change.ID,
+				change.Timestamp,
 				change.Operation,
-				strings.Join(change.Current, ","),
-				strings.Join(change.Incoming, ","),
+				strings.Join(change.Previous, ","),
+				strings.Join(change.Next, ","),
 			),
 		)
 	}
 
 	query := fmt.Sprintf(
-		"%s %s (operation,current,incoming) VALUES %s",
+		"%s %s (id,timestamp,operation,current,incoming) VALUES %s",
 		command, target, strings.Join(values, ","),
 	)
 

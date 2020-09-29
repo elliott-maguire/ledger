@@ -20,14 +20,14 @@ func (s fooBarSource) GetSchedule() string {
 	return "* * * * *"
 }
 
-func (s fooBarSource) GetData() ([]string, *map[string][]string, error) {
+func (s fooBarSource) GetData() ([]string, map[string][]string, error) {
 	fields := []string{"foo", "bar"}
 	records := map[string][]string{
 		"1": {getRandomString(8), getRandomString(8)},
 		"2": {getRandomString(8), getRandomString(8)},
 	}
 
-	return fields, &records, nil
+	return fields, records, nil
 }
 
 func getRandomString(n int) string {

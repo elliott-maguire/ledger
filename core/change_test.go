@@ -15,7 +15,7 @@ func TestGetChanges(t *testing.T) {
 	}
 
 	changes := GetChanges(current, incoming)
-	if len(*changes) != 3 {
+	if len(changes) != 3 {
 		t.Error("failed")
 	}
 }

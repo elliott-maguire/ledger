@@ -32,8 +32,8 @@ func NewHandler(source Source) func() {
 			return
 		}
 
-		changes := core.GetChanges(*current, *incoming)
-		if *changes != nil {
+		changes := core.GetChanges(current, incoming)
+		if changes != nil {
 			if err := core.WriteChanges(uri, schema, changes); err != nil {
 				return
 			}
