@@ -3,6 +3,8 @@ package examples
 import (
 	"math/rand"
 
+	"github.com/jmoiron/sqlx"
+	_ "github.com/lib/pq" // postgres driver
 	"github.com/sr-revops/house/scheduler"
 )
 
@@ -12,8 +14,13 @@ func (s fooBarSource) GetSchema() string {
 	return "foobar"
 }
 
-func (s fooBarSource) GetURI() string {
-	return "postgresql://localhost:5432/foobar"
+func (s fooBarSource) GetDB() (*sqlx.DB, error) {
+	db, err := sqlx.Open("postgres", "postgresql://localhost:5432/foobar")
+	if err != nil {
+		return nil, err
+	}
+
+	return db, nil
 }
 
 func (s fooBarSource) GetSchedule() string {

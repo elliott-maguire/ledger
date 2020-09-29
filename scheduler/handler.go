@@ -12,12 +12,16 @@ import (
 func NewHandler(source Source) func() {
 	return func() {
 		schema := source.GetSchema()
-		uri := source.GetURI()
-		if err := core.WriteStore(uri, schema); err != nil {
+		db, err := source.GetDB()
+		if err != nil {
 			return
 		}
 
-		current, err := core.ReadRecords(uri, schema)
+		if err := core.WriteStore(db, schema); err != nil {
+			return
+		}
+
+		current, err := core.ReadRecords(db, schema)
 		if err != nil {
 			if pqErr := err.(*pq.Error); pqErr.Code != "42P01" {
 				return
@@ -28,13 +32,13 @@ func NewHandler(source Source) func() {
 		if err != nil {
 			return
 		}
-		if err := core.WriteRecords(uri, schema, fields, incoming); err != nil {
+		if err := core.WriteRecords(db, schema, fields, incoming); err != nil {
 			return
 		}
 
 		changes := core.GetChanges(current, incoming)
 		if changes != nil {
-			if err := core.WriteChanges(uri, schema, changes); err != nil {
+			if err := core.WriteChanges(db, schema, changes); err != nil {
 				return
 			}
 		}
