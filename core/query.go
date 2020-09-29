@@ -37,9 +37,14 @@ func BuildInsertRecordsQuery(schema string, fields []string, records map[string]
 
 	var values []string
 	for key, record := range records {
+		cleaned := make([]string, len(record))
+		for i, cell := range record {
+			cleaned[i] = re.ReplaceAllString(cell, "")
+		}
+
 		values = append(
 			values,
-			fmt.Sprintf("('%s','%s')", key, strings.Join(record, "','")),
+			fmt.Sprintf("('%s','%s')", key, strings.Join(cleaned, "','")),
 		)
 	}
 
@@ -72,6 +77,16 @@ func BuildInsertChangesQuery(schema string, changes []Change) string {
 
 	var values []string
 	for _, change := range changes {
+		cleanedPrevious := make([]string, len(change.Previous))
+		for i, cell := range change.Previous {
+			cleanedPrevious[i] = re.ReplaceAllString(cell, "")
+		}
+
+		cleanedNext := make([]string, len(change.Next))
+		for i, cell := range change.Next {
+			cleanedNext[i] = re.ReplaceAllString(cell, "")
+		}
+
 		values = append(
 			values,
 			fmt.Sprintf(
