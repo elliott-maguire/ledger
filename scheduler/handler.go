@@ -16,34 +16,34 @@ func NewHandler(source Source) func() {
 		schema := source.GetSchema()
 		db, err := source.GetDB()
 		if err != nil {
-			return
+			log.Fatal(err)
 		}
 
 		log.Printf("Loading: %s\n", schema)
 
 		if err := core.WriteStore(db, schema); err != nil {
-			return
+			log.Fatal(err)
 		}
 
 		current, err := core.ReadRecords(db, schema)
 		if err != nil {
 			if pqErr := err.(*pq.Error); pqErr.Code != "42P01" {
-				return
+				log.Fatal(err)
 			}
 		}
 
 		fields, incoming, err := source.GetData()
 		if err != nil {
-			return
+			log.Fatal(err)
 		}
 		if err := core.WriteRecords(db, schema, fields, incoming); err != nil {
-			return
+			log.Fatal(err)
 		}
 
 		changes := core.GetChanges(current, incoming)
 		if changes != nil {
 			if err := core.WriteChanges(db, schema, changes); err != nil {
-				return
+				log.Fatal(err)
 			}
 		}
 
