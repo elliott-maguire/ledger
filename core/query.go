@@ -58,7 +58,6 @@ func BuildInsertRecordsQuery(schema string, fields []string, records map[string]
 	}
 
 	query := fmt.Sprintf(insertRecordsQuery, schema, strings.Join(safeFields, ","), strings.Join(values, ","))
-	fmt.Println(query)
 
 	return strings.ToValidUTF8(query, "")
 }
