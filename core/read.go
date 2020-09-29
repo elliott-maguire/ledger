@@ -10,7 +10,7 @@ import (
 
 // ReadRecords pulls all of the records out of the records table
 // in a given store.
-func ReadRecords(uri string, schema string) (*map[string][]string, error) {
+func ReadRecords(uri string, schema string) (map[string][]string, error) {
 	db, err := sqlx.Open("postgres", uri)
 	if err != nil {
 		return nil, err
@@ -39,12 +39,12 @@ func ReadRecords(uri string, schema string) (*map[string][]string, error) {
 		records[key] = values
 	}
 
-	return &records, nil
+	return records, nil
 }
 
 // ReadChanges pulls all of the changes out of the changes table
 // in a given store.
-func ReadChanges(uri string, schema string) (*[]Change, error) {
+func ReadChanges(uri string, schema string) ([]Change, error) {
 	db, err := sqlx.Open("postgres", uri)
 	if err != nil {
 		return nil, err
@@ -63,13 +63,16 @@ func ReadChanges(uri string, schema string) (*[]Change, error) {
 			return nil, err
 		}
 
-		record := make([]string, len(dest))
+		row := make([]string, len(dest))
 		for i, v := range dest {
-			record[i] = v.(string)
+			row[i] = v.(string)
 		}
 
+		id := row[0]
+		timestamp := row[1]
+
 		var operation OperationType
-		opCode, err := strconv.Atoi(record[0])
+		opCode, err := strconv.Atoi(row[2])
 		if err != nil {
 			return nil, err
 		}
@@ -82,16 +85,48 @@ func ReadChanges(uri string, schema string) (*[]Change, error) {
 			operation = Deletion
 		}
 
-		current := strings.Split(record[1], ",")
-		incoming := strings.Split(record[2], ",")
+		current := strings.Split(row[3], ",")
+		incoming := strings.Split(row[4], ",")
 
 		change := Change{
+			ID:        id,
+			Timestamp: timestamp,
 			Operation: operation,
-			Current:   current,
-			Incoming:  incoming,
+			Previous:  current,
+			Next:      incoming,
 		}
 		changes = append(changes, change)
 	}
 
-	return &changes, nil
+	return changes, nil
+}
+
+// ReadArchive returns a copy of the given schema's records at the given time.
+// The timestamp must be in the RFC3339 format, as that is the format used for stamping
+// change sets as they are stored.
+func ReadArchive(uri string, schema string, timestamp string) (map[string][]string, error) {
+	records, err := ReadRecords(uri, schema)
+	if err != nil {
+		return nil, err
+	}
+	changes, err := ReadChanges(uri, schema)
+	if err != nil {
+		return nil, err
+	}
+
+	for i := range changes {
+		change := changes[i]
+		if change.Timestamp == timestamp {
+			switch change.Operation {
+			case Addition:
+				delete(records, change.ID)
+			case Modification:
+				records[change.ID] = change.Previous
+			case Deletion:
+				records[change.ID] = change.Previous
+			}
+		}
+	}
+
+	return records, nil
 }
