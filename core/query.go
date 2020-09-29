@@ -10,7 +10,7 @@ var (
 	re = regexp.MustCompile("[^0-9A-Za-z_]")
 
 	createRecordsQuery = "CREATE TABLE IF NOT EXISTS %s.records (id VARCHAR,%s)"
-	insertRecordsQuery = "INSERT INTO %s.records (id VARCHAR,%s) VALUES %s"
+	insertRecordsQuery = "INSERT INTO %s.records (id,%s) VALUES %s"
 	createChangesQuery = `
 		CREATE TABLE IF NOT EXISTS %s.changes (
 			id VARCHAR, 
@@ -32,6 +32,7 @@ func BuildCreateRecordsTableQuery(schema string, fields []string) string {
 	}
 
 	query := fmt.Sprintf(createRecordsQuery, schema, strings.Join(values, ","))
+
 	return strings.ToValidUTF8(query, "")
 }
 
@@ -45,13 +46,20 @@ func BuildInsertRecordsQuery(schema string, fields []string, records map[string]
 
 	var values []string
 	for key, record := range records {
+		var cleaned []string
+		for _, cell := range record {
+			cleaned = append(cleaned, re.ReplaceAllString(cell, ""))
+		}
+
 		values = append(
 			values,
-			fmt.Sprintf(`("%s","%s")`, key, strings.Join(record, "','")),
+			fmt.Sprintf("('%s','%s')", key, strings.Join(cleaned, "','")),
 		)
 	}
 
 	query := fmt.Sprintf(insertRecordsQuery, schema, strings.Join(safeFields, ","), strings.Join(values, ","))
+	fmt.Println(query)
+
 	return strings.ToValidUTF8(query, "")
 }
 
@@ -59,6 +67,7 @@ func BuildInsertRecordsQuery(schema string, fields []string, records map[string]
 // don't have to look at SQL in other functions.
 func BuildCreateChangesTableQuery(schema string) string {
 	query := fmt.Sprintf(createChangesQuery, schema)
+
 	return strings.ToValidUTF8(query, "")
 }
 
@@ -67,19 +76,30 @@ func BuildCreateChangesTableQuery(schema string) string {
 func BuildInsertChangesQuery(schema string, changes []Change) string {
 	var values []string
 	for _, change := range changes {
+		cleanedPrevious := make([]string, len(change.Previous))
+		for i, cell := range change.Previous {
+			cleanedPrevious[i] = re.ReplaceAllString(cell, "")
+		}
+
+		cleanedNext := make([]string, len(change.Next))
+		for i, cell := range change.Next {
+			cleanedNext[i] = re.ReplaceAllString(cell, "")
+		}
+
 		values = append(
 			values,
 			fmt.Sprintf(
-				`('%s','%s','%d',"%s","%s")`,
+				"('%s','%s','%d','%s','%s')",
 				change.ID,
 				change.Timestamp,
 				change.Operation,
-				strings.Join(change.Previous, ","),
-				strings.Join(change.Next, ","),
+				strings.Join(cleanedPrevious, ","),
+				strings.Join(cleanedNext, ","),
 			),
 		)
 	}
 
 	query := fmt.Sprintf(insertChangesQuery, schema, strings.Join(values, ","))
+
 	return strings.ToValidUTF8(query, "")
 }
