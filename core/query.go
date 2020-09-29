@@ -2,6 +2,7 @@ package core
 
 import (
 	"fmt"
+	"regexp"
 	"strings"
 )
 
@@ -23,9 +24,11 @@ var (
 // BuildCreateRecordsTableQuery smashes together a schema and list of fields
 // to build the query used to create the records table for a Store.
 func BuildCreateRecordsTableQuery(schema string, fields []string) string {
+	re := regexp.MustCompile("[^0-9A-Za-z_]")
+
 	var values []string
 	for _, field := range fields {
-		values = append(values, strings.ReplaceAll(field, "'", "")+" VARCHAR")
+		values = append(values, re.ReplaceAllString(field, "")+" VARCHAR")
 	}
 
 	query := fmt.Sprintf(createRecordsQuery, schema, strings.Join(values, ","))
