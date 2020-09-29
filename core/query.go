@@ -6,30 +6,38 @@ import (
 	"strings"
 )
 
-var re = regexp.MustCompile("[^0-9A-Za-z_]")
+var (
+	re = regexp.MustCompile("[^0-9A-Za-z_]")
+
+	createRecordsQuery = "CREATE TABLE IF NOT EXISTS %s.records (id VARCHAR,%s)"
+	insertRecordsQuery = "INSERT INTO %s.records (id VARCHAR,%s) VALUES %s"
+	createChangesQuery = `
+		CREATE TABLE IF NOT EXISTS %s.changes (
+			id VARCHAR, 
+			timestamp VARCHAR, 
+			operation VARCHAR, 
+			current VARCHAR, 
+			incoming VARCHAR
+		)
+	`
+	insertChangesQuery = "INSERT INTO %s.changes (id,timestamp,operation,current,incoming) VALUES %s"
+)
 
 // BuildCreateRecordsTableQuery smashes together a schema and list of fields
 // to build the query used to create the records table for a Store.
 func BuildCreateRecordsTableQuery(schema string, fields []string) string {
-	command := "CREATE TABLE IF NOT EXISTS"
-	target := schema + ".records"
-
 	var values []string
 	for _, field := range fields {
 		values = append(values, re.ReplaceAllString(field, "")+" VARCHAR")
 	}
 
-	query := fmt.Sprintf("%s %s (id VARCHAR,%s)", command, target, strings.Join(values, ","))
-
+	query := fmt.Sprintf(createRecordsQuery, schema, strings.Join(values, ","))
 	return strings.ToValidUTF8(query, "")
 }
 
 // BuildInsertRecordsQuery compiles all the value sets in a set of records
 // into a single query.
 func BuildInsertRecordsQuery(schema string, fields []string, records map[string][]string) string {
-	command := "INSERT INTO"
-	target := schema + ".records"
-
 	var safeFields []string
 	for _, field := range fields {
 		safeFields = append(safeFields, re.ReplaceAllString(field, ""))
@@ -37,60 +45,32 @@ func BuildInsertRecordsQuery(schema string, fields []string, records map[string]
 
 	var values []string
 	for key, record := range records {
-		cleaned := make([]string, len(record))
-		for i, cell := range record {
-			cleaned[i] = re.ReplaceAllString(cell, "")
-		}
-
 		values = append(
 			values,
-			fmt.Sprintf("('%s','%s')", key, strings.Join(cleaned, "','")),
+			fmt.Sprintf(`("%s","%s")`, key, strings.Join(record, "','")),
 		)
 	}
 
-	query := fmt.Sprintf(
-		"%s %s (id,%s) VALUES %s",
-		command, target, strings.Join(safeFields, ","), strings.Join(values, ","),
-	)
-
+	query := fmt.Sprintf(insertRecordsQuery, schema, strings.Join(safeFields, ","), strings.Join(values, ","))
 	return strings.ToValidUTF8(query, "")
 }
 
 // BuildCreateChangesTableQuery is another convenient hideaway so that we
 // don't have to look at SQL in other functions.
 func BuildCreateChangesTableQuery(schema string) string {
-	command := "CREATE TABLE IF NOT EXISTS"
-	target := schema + ".changes"
-
-	values := "(id VARCHAR, timestamp VARCHAR, operation VARCHAR, current VARCHAR, incoming VARCHAR)"
-
-	query := fmt.Sprintf("%s %s %s", command, target, values)
-
+	query := fmt.Sprintf(createChangesQuery, schema)
 	return strings.ToValidUTF8(query, "")
 }
 
 // BuildInsertChangesQuery is yet another convenience function for hiding away
 // unique query building.
 func BuildInsertChangesQuery(schema string, changes []Change) string {
-	command := "INSERT INTO"
-	target := schema + ".changes"
-
 	var values []string
 	for _, change := range changes {
-		cleanedPrevious := make([]string, len(change.Previous))
-		for i, cell := range change.Previous {
-			cleanedPrevious[i] = re.ReplaceAllString(cell, "")
-		}
-
-		cleanedNext := make([]string, len(change.Next))
-		for i, cell := range change.Next {
-			cleanedNext[i] = re.ReplaceAllString(cell, "")
-		}
-
 		values = append(
 			values,
 			fmt.Sprintf(
-				"('%s','%s','%d','%s','%s')",
+				`('%s','%s','%d',"%s","%s")`,
 				change.ID,
 				change.Timestamp,
 				change.Operation,
@@ -100,10 +80,6 @@ func BuildInsertChangesQuery(schema string, changes []Change) string {
 		)
 	}
 
-	query := fmt.Sprintf(
-		"%s %s (id,timestamp,operation,current,incoming) VALUES %s",
-		command, target, strings.Join(values, ","),
-	)
-
+	query := fmt.Sprintf(insertChangesQuery, schema, strings.Join(values, ","))
 	return strings.ToValidUTF8(query, "")
 }
