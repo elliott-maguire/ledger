@@ -39,9 +39,11 @@ func BuildCreateRecordsTableQuery(schema string, fields []string) string {
 // BuildInsertRecordsQuery compiles all the value sets in a set of records
 // into a single query.
 func BuildInsertRecordsQuery(schema string, fields []string, records map[string][]string) string {
+	re := regexp.MustCompile("[^0-9A-Za-z_]")
+
 	var safeFields []string
 	for _, field := range fields {
-		safeFields = append(safeFields, strings.ReplaceAll(field, "'", ""))
+		safeFields = append(safeFields, re.ReplaceAllString(field, ""))
 	}
 
 	var values []string

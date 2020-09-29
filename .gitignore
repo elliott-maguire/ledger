@@ -24,3 +24,7 @@ logfile
 
 # Other
 temp.*
+lib/
+main.go
+conf.yml
+.env
