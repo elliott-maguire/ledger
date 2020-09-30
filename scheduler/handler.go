@@ -47,6 +47,8 @@ func NewHandler(source Source) func() {
 			}
 		}
 
+		db.Close()
+
 		log.Printf("Done: %s (%d records, %d changes)", schema, len(incoming), len(changes))
 	}
 }
