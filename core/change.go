@@ -1,9 +1,7 @@
 package core
 
 import (
-	"fmt"
 	"reflect"
-	"strings"
 	"time"
 )
 
@@ -54,8 +52,6 @@ func GetChanges(current map[string][]string, incoming map[string][]string) []Cha
 				Previous:  currentRecord,
 				Next:      incomingRecord,
 			}
-			fmt.Println(strings.Join(currentRecord, "\n"))
-			fmt.Println(strings.Join(incomingRecord, "\n"))
 			changes = append(changes, change)
 		}
 	}
