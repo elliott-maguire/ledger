@@ -1,10 +1,10 @@
-# house
+# brickhouse
 
-House is a little data warehousing tool that uses set comparison to generate linear atomic change lists for connected data sources. It allows the user to keep a history of any two-dimensional data sets. It is written in Go and runs on top of Postgres.
+Brickhouse is a little data warehousing tool that uses set comparison to generate linear atomic change lists for connected data sources. It allows the user to keep a history of any two-dimensional data sets. It is written in Go and runs on top of Postgres.
 
 ## Rationale
 
-I wrote this tool to address the need for a centralized history for some of our team's Salesforce reports. I took an open-source approach to ensure clean and flexible design. We wanted to build something in-house because other SaaS warehousing solutions out there cost a fortune, and for good reason; their features sets are immense, but we just didn't need that much firepower for our use case.
+I wrote this tool to address the need for a centralized history for some of our team's Salesforce reports. I took an open-source approach to ensure clean and flexible design. We wanted to build something in-brickhouse because other SaaS warehousing solutions out there cost a fortune, and for good reason; their features sets are immense, but we just didn't need that much firepower for our use case.
 
 If you find yourself needing to keep track of changes on a given flat data set, this is a great tool. If you have a use case that isn't quite supported but would fit in well, please open up a issue or submit a PR and maybe we can make this into something better!
 

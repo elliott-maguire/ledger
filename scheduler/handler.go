@@ -4,7 +4,7 @@ import (
 	"log"
 
 	"github.com/lib/pq"
-	"github.com/sr-revops/house/core"
+	"github.com/sr-revops/brickhouse/core"
 )
 
 // NewHandler creates a schedulable function that uses the given source to

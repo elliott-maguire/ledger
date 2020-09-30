@@ -1,4 +1,4 @@
-module github.com/sr-revops/house
+module github.com/sr-revops/brickhouse
 
 go 1.15
 
@@ -20,7 +20,7 @@ require (
 	github.com/robfig/cron v1.2.0
 	github.com/sirupsen/logrus v1.7.0 // indirect
 	github.com/stretchr/testify v1.6.1 // indirect
-	golang.org/x/net v0.0.0-20200927032502-5d4f70055728 // indirect
+	golang.org/x/net v0.0.0-20200930145003-4acb6c075d10 // indirect
 	golang.org/x/sys v0.0.0-20200929083018-4d22bbb62b3c // indirect
 	google.golang.org/appengine v1.6.6 // indirect
 	gotest.tools v2.2.0+incompatible // indirect
