@@ -1,7 +1,9 @@
 package core
 
 import (
+	"fmt"
 	"reflect"
+	"strings"
 	"time"
 )
 
@@ -32,37 +34,42 @@ func GetChanges(current map[string][]string, incoming map[string][]string) []Cha
 
 	for key, incomingRecord := range incoming {
 		if _, exists := current[key]; !exists {
-			changes = append(changes, Change{
+			change := Change{
 				ID:        key,
 				Timestamp: timestamp,
 				Operation: Addition,
 				Previous:  nil,
 				Next:      incomingRecord,
-			})
+			}
+			changes = append(changes, change)
 		}
 	}
 
 	for key, incomingRecord := range incoming {
 		if currentRecord, exists := current[key]; exists && !reflect.DeepEqual(incomingRecord, currentRecord) {
-			changes = append(changes, Change{
+			change := Change{
 				ID:        key,
 				Timestamp: timestamp,
 				Operation: Modification,
 				Previous:  currentRecord,
 				Next:      incomingRecord,
-			})
+			}
+			fmt.Println(strings.Join(currentRecord, "\n"))
+			fmt.Println(strings.Join(incomingRecord, "\n"))
+			changes = append(changes, change)
 		}
 	}
 
 	for key, currentRecord := range current {
 		if _, exists := incoming[key]; !exists {
-			changes = append(changes, Change{
+			change := Change{
 				ID:        key,
 				Timestamp: timestamp,
 				Operation: Deletion,
 				Previous:  currentRecord,
 				Next:      nil,
-			})
+			}
+			changes = append(changes, change)
 		}
 	}
 

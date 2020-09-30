@@ -50,7 +50,7 @@ func BuildInsertRecordsQuery(schema string, fields []string, records map[string]
 	for key, record := range records {
 		var cleaned []string
 		for _, cell := range record {
-			cleaned = append(cleaned, strings.ReplaceAll(cell, "'", ""))
+			cleaned = append(cleaned, strings.ReplaceAll(cell, "'", "''"))
 		}
 
 		values = append(
@@ -79,12 +79,12 @@ func BuildInsertChangesQuery(schema string, changes []Change) string {
 	for _, change := range changes {
 		cleanedPrevious := make([]string, len(change.Previous))
 		for i, cell := range change.Previous {
-			cleanedPrevious[i] = strings.ReplaceAll(cell, "'", "")
+			cleanedPrevious[i] = strings.ReplaceAll(cell, "'", "''")
 		}
 
 		cleanedNext := make([]string, len(change.Next))
 		for i, cell := range change.Next {
-			cleanedNext[i] = strings.ReplaceAll(cell, "'", "")
+			cleanedNext[i] = strings.ReplaceAll(cell, "'", "''")
 		}
 
 		values = append(
