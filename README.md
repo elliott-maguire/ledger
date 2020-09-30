@@ -1,6 +1,6 @@
-# brickhouse
+# Brickhouse
 
-Brickhouse is a little data warehousing tool that uses set comparison to generate linear atomic change lists for connected data sources. It allows the user to keep a history of any two-dimensional data sets. It is written in Go and runs on top of Postgres.
+Brickhouse is a small but sturdy data warehousing tool that uses set comparison to generate linear atomic change lists for connected data sources. It allows the user to keep a history of any two-dimensional data sets. It is written in Go and runs on top of Postgres.
 
 ## Rationale
 
