@@ -47,11 +47,11 @@ func NewHandler(source Source) func() {
 			}
 		}
 
+		log.Printf("Done: %s (%d records, %d changes)", schema, len(incoming), len(changes))
+
 		db.Close()
 		incoming = nil
 		current = nil
 		changes = nil
-
-		log.Printf("Done: %s (%d records, %d changes)", schema, len(incoming), len(changes))
 	}
 }
