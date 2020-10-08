@@ -1,4 +1,4 @@
-package scheduler
+package brickhouse
 
 import "github.com/jmoiron/sqlx"
 

@@ -1,4 +1,4 @@
-package core
+package brickhouse
 
 import (
 	"fmt"
@@ -86,7 +86,12 @@ func TestWriteRecords(t *testing.T) {
 		return
 	}
 
-	if err := WriteRecords(db, schema, fields, set1); err != nil {
+	if err := WriteRecords(db, schema, Live, fields, set1); err != nil {
+		t.Error(err)
+		return
+	}
+
+	if err := WriteRecords(db, schema, Archive, fields, set1); err != nil {
 		t.Error(err)
 		return
 	}
@@ -118,12 +123,12 @@ func TestReadRecords(t *testing.T) {
 		return
 	}
 
-	if err := WriteRecords(db, schema, fields, set1); err != nil {
+	if err := WriteRecords(db, schema, Live, fields, set1); err != nil {
 		t.Error(err)
 		return
 	}
 
-	_, err := ReadRecords(db, schema)
+	_, err := ReadRecords(db, schema, Live)
 	if err != nil {
 		t.Error(err)
 	}
@@ -165,7 +170,7 @@ func TestReadArchive(t *testing.T) {
 	}
 
 	handle := func(a map[string][]string, b map[string][]string) (string, error) {
-		if err := WriteRecords(db, schema, fields, b); err != nil {
+		if err := WriteRecords(db, schema, Live, fields, b); err != nil {
 			return "", err
 		}
 		changes := GetChanges(a, b)
@@ -196,7 +201,16 @@ func TestReadArchive(t *testing.T) {
 		t.Error(err)
 	}
 
-	records, err := ReadArchive(db, schema, timestamp)
+	archiveRecords, err := GetArchive(db, schema, timestamp)
+	if err != nil {
+		t.Error(err)
+	}
+	if err := WriteRecords(db, schema, Archive, fields, archiveRecords); err != nil {
+		t.Error(err)
+		return
+	}
+
+	records, err := ReadRecords(db, schema, Archive)
 	if err != nil {
 		t.Error(err)
 		return

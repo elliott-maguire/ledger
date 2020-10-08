@@ -1,4 +1,4 @@
-package core
+package brickhouse
 
 import (
 	"fmt"
@@ -7,8 +7,8 @@ import (
 )
 
 var (
-	createRecordsQuery = "CREATE TABLE IF NOT EXISTS %s.records (id VARCHAR,%s)"
-	insertRecordsQuery = "INSERT INTO %s.records (id,%s) VALUES %s"
+	createRecordsQuery = "CREATE TABLE IF NOT EXISTS %s.%s (id VARCHAR,%s)"
+	insertRecordsQuery = "INSERT INTO %s.%s (id,%s) VALUES (%s)"
 	createChangesQuery = `
 		CREATE TABLE IF NOT EXISTS %s.changes (
 			id VARCHAR, 
@@ -23,7 +23,7 @@ var (
 
 // BuildCreateRecordsTableQuery smashes together a schema and list of fields
 // to build the query used to create the records table for a Store.
-func BuildCreateRecordsTableQuery(schema string, fields []string) string {
+func BuildCreateRecordsTableQuery(schema string, table string, fields []string) string {
 	re := regexp.MustCompile("[^0-9A-Za-z_]")
 
 	var values []string
@@ -31,35 +31,29 @@ func BuildCreateRecordsTableQuery(schema string, fields []string) string {
 		values = append(values, re.ReplaceAllString(field, "")+" VARCHAR")
 	}
 
-	query := fmt.Sprintf(createRecordsQuery, schema, strings.Join(values, ","))
+	query := fmt.Sprintf(createRecordsQuery, schema, table, strings.Join(values, ","))
 
 	return strings.ToValidUTF8(query, "")
 }
 
-// BuildInsertRecordsQuery compiles all the value sets in a set of records
+// BuildInsertRecordQuery compiles all the value sets in a set of records
 // into a single query.
-func BuildInsertRecordsQuery(schema string, fields []string, records map[string][]string) string {
+func BuildInsertRecordQuery(schema string, table string, fields []string, key string, record []string) string {
 	re := regexp.MustCompile("[^0-9A-Za-z_]")
 
 	var safeFields []string
 	for _, field := range fields {
 		safeFields = append(safeFields, re.ReplaceAllString(field, ""))
 	}
+	fieldsClause := strings.Join(safeFields, ",")
 
-	var values []string
-	for key, record := range records {
-		var cleaned []string
-		for _, cell := range record {
-			cleaned = append(cleaned, strings.ReplaceAll(cell, "'", "''"))
-		}
-
-		values = append(
-			values,
-			fmt.Sprintf("('%s','%s')", key, strings.Join(cleaned, "','")),
-		)
+	var safeValues []string
+	for _, value := range record {
+		safeValues = append(safeValues, strings.ReplaceAll(value, "'", ""))
 	}
+	valuesClause := fmt.Sprintf("'%s','%s'", key, strings.Join(safeValues, "','"))
 
-	query := fmt.Sprintf(insertRecordsQuery, schema, strings.Join(safeFields, ","), strings.Join(values, ","))
+	query := fmt.Sprintf(insertRecordsQuery, schema, table, fieldsClause, valuesClause)
 
 	return strings.ToValidUTF8(query, "")
 }

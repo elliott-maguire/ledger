@@ -1,10 +1,9 @@
-package scheduler
+package brickhouse
 
 import (
 	"log"
 
 	"github.com/lib/pq"
-	"github.com/sr-revops/brickhouse/core"
 )
 
 // NewHandler creates a schedulable function that uses the given source to
@@ -21,11 +20,11 @@ func NewHandler(source Source) func() {
 
 		log.Printf("Loading: %s\n", schema)
 
-		if err := core.WriteStore(db, schema); err != nil {
+		if err := WriteStore(db, schema); err != nil {
 			log.Fatal(err)
 		}
 
-		current, err := core.ReadRecords(db, schema)
+		current, err := ReadRecords(db, schema, Live)
 		if err != nil {
 			if pqErr := err.(*pq.Error); pqErr.Code != "42P01" {
 				log.Fatal(err)
@@ -36,13 +35,13 @@ func NewHandler(source Source) func() {
 		if err != nil {
 			log.Fatal(err)
 		}
-		if err := core.WriteRecords(db, schema, fields, incoming); err != nil {
+		if err := WriteRecords(db, schema, Live, fields, incoming); err != nil {
 			log.Fatal(err)
 		}
 
-		changes := core.GetChanges(current, incoming)
+		changes := GetChanges(current, incoming)
 		if changes != nil {
-			if err := core.WriteChanges(db, schema, changes); err != nil {
+			if err := WriteChanges(db, schema, changes); err != nil {
 				log.Fatal(err)
 			}
 		}

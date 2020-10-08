@@ -1,4 +1,4 @@
-package core
+package brickhouse
 
 import (
 	"fmt"
@@ -7,6 +7,16 @@ import (
 
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq" // postgres driver
+)
+
+// TableDirective allows the user to point the WriteRecords method to either the live table
+// or the archive table when writing a given record map.
+type TableDirective uint
+
+// ...
+const (
+	Live TableDirective = iota
+	Archive
 )
 
 // WriteStore takes a database URI and schema name to write to the database.
@@ -19,26 +29,36 @@ func WriteStore(db *sqlx.DB, schema string) error {
 	return nil
 }
 
-// WriteRecords takes a schema name and an array of Record instances
-// and writes them to the corresponding schema.
-func WriteRecords(db *sqlx.DB, schema string, fields []string, records map[string][]string) error {
+// WriteRecords takes a schema name and a record map and writes them to the corresponding schema.
+func WriteRecords(db *sqlx.DB, schema string, directive TableDirective, fields []string, records map[string][]string) error {
+	var table string
+	if directive == 0 {
+		table = "live"
+	} else {
+		table = "archive"
+	}
+
 	tx, err := db.Begin()
 	if err != nil {
 		return err
 	}
 	defer tx.Rollback()
 
-	createTable := BuildCreateRecordsTableQuery(schema, fields)
+	createTable := BuildCreateRecordsTableQuery(schema, table, fields)
 	if _, err := tx.Exec(createTable); err != nil {
 		return err
 	}
-	truncateTable := "TRUNCATE " + schema + ".records"
+	truncateTable := "TRUNCATE " + schema + "." + table
 	if _, err := tx.Exec(truncateTable); err != nil {
 		return err
 	}
-	insertRecords := BuildInsertRecordsQuery(schema, fields, records)
-	if _, err := tx.Exec(insertRecords); err != nil {
-		return err
+
+	var insertRecord string
+	for key, record := range records {
+		insertRecord = BuildInsertRecordQuery(schema, table, fields, key, record)
+		if _, err := tx.Exec(insertRecord); err != nil {
+			return err
+		}
 	}
 
 	if err := tx.Commit(); err != nil {
@@ -75,8 +95,15 @@ func WriteChanges(db *sqlx.DB, schema string, changes []Change) error {
 
 // ReadRecords pulls all of the records out of the records table
 // in a given store.
-func ReadRecords(db *sqlx.DB, schema string) (map[string][]string, error) {
-	query := fmt.Sprintf("SELECT * FROM %s.records", schema)
+func ReadRecords(db *sqlx.DB, schema string, directive TableDirective) (map[string][]string, error) {
+	var table string
+	if directive == 0 {
+		table = "live"
+	} else {
+		table = "archive"
+	}
+
+	query := fmt.Sprintf("SELECT * FROM %s.%s", schema, table)
 	rows, err := db.Queryx(query)
 	if err != nil {
 		return nil, err
@@ -154,34 +181,4 @@ func ReadChanges(db *sqlx.DB, schema string) ([]Change, error) {
 	}
 
 	return changes, nil
-}
-
-// ReadArchive returns a copy of the given schema's records at the given time.
-// The timestamp must be in the RFC3339 format, as that is the format used for stamping
-// change sets as they are stored.
-func ReadArchive(db *sqlx.DB, schema string, timestamp string) (map[string][]string, error) {
-	records, err := ReadRecords(db, schema)
-	if err != nil {
-		return nil, err
-	}
-	changes, err := ReadChanges(db, schema)
-	if err != nil {
-		return nil, err
-	}
-
-	for i := range changes {
-		change := changes[i]
-		if change.Timestamp == timestamp {
-			switch change.Operation {
-			case Addition:
-				delete(records, change.ID)
-			case Modification:
-				records[change.ID] = change.Previous
-			case Deletion:
-				records[change.ID] = change.Previous
-			}
-		}
-	}
-
-	return records, nil
 }
