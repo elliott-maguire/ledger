@@ -29,3 +29,4 @@ main.go
 conf.yml
 .env
 *.prof
+legacy/
