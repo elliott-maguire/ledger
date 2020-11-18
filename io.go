@@ -23,7 +23,7 @@ func Update(db *sqlx.DB, label string, data *map[string]interface{}) error {
 		return err
 	}
 
-	if err := Write(db, label, Live, data); err != nil {
+	if err := Write(db, label, Live, data, true); err != nil {
 		return err
 	}
 

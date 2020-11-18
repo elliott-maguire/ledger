@@ -91,7 +91,7 @@ func TestRead(t *testing.T) {
 		},
 	}
 
-	if err := Write(db, "test", Live, &dIn); err != nil {
+	if err := Write(db, "test", Live, &dIn, true); err != nil {
 		t.Error(err)
 	}
 
@@ -131,7 +131,7 @@ func TestWrite(t *testing.T) {
 		},
 	}
 
-	if err := Write(db, "test", Live, &d); err != nil {
+	if err := Write(db, "test", Live, &d, true); err != nil {
 		t.Error(err)
 	}
 

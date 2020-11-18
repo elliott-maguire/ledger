@@ -74,6 +74,7 @@ func Read(db *sqlx.DB, label string, table Table) (*map[string]interface{}, erro
 		return nil, err
 	}
 
+	// Scan rows into maps, extract record ID, add to data map
 	data := make(map[string]interface{})
 	record := make(map[string]interface{})
 	for rows.Next() {
@@ -91,8 +92,35 @@ func Read(db *sqlx.DB, label string, table Table) (*map[string]interface{}, erro
 }
 
 // Write to the indicated table in the labeled store.
-func Write(db *sqlx.DB, label string, table Table, data *map[string]interface{}, args ...bool) error {
+func Write(db *sqlx.DB, label string, table Table, data *map[string]interface{}, drop bool) error {
 	if err := Ensure(db, label); err != nil {
+		return err
+	}
+
+	// Drop the table if it exists
+	if _, check := db.Query(fmt.Sprintf("SELECT * FROM %s.%s", label, table)); check == nil && drop {
+		if _, err := db.Exec(fmt.Sprintf("DROP TABLE %s.%s", label, table)); err != nil {
+			return err
+		}
+	}
+
+	// Get a fieldset from the keys of an arbitrary record and create the table
+	var fields []string
+	var values []string
+	i := 0
+	for _, v := range *data {
+		if i > 0 {
+			break
+		}
+		for k := range v.(map[string]interface{}) {
+			fields = append(fields, k)
+		}
+		i++
+	}
+	fieldset := createFieldset(fields)
+	if _, err := db.Exec(
+		fmt.Sprintf("CREATE TABLE IF NOT EXISTS %s.%s (brickhouse_id VARCHAR,%s)", label, table, fieldset),
+	); err != nil {
 		return err
 	}
 
@@ -102,12 +130,9 @@ func Write(db *sqlx.DB, label string, table Table, data *map[string]interface{},
 	}
 	defer tx.Rollback()
 
-	var fields []string
-	var values []string
-	insertions := make([]string, 0)
 	for id, record := range *data {
-		fields = make([]string, 0)
-		values = make([]string, 0)
+		fields = []string{}
+		values = []string{}
 
 		for k, v := range record.(map[string]interface{}) {
 			fields = append(fields, k)
@@ -117,35 +142,12 @@ func Write(db *sqlx.DB, label string, table Table, data *map[string]interface{},
 		fieldset := strings.Join(fields, ",")
 		valueset := strings.Join(values, ",")
 
-		insertion := fmt.Sprintf(
-			"INSERT INTO %s.%s (brickhouse_id,%s) VALUES ('%s',%s)",
-			label, table, fieldset, id, valueset,
-		)
-		insertions = append(insertions, insertion)
-	}
-
-	fieldset := createFieldset(append(fields, "brickhouse_id"))
-	createTable := fmt.Sprintf("CREATE TABLE IF NOT EXISTS %s.%s (%s)", label, table, fieldset)
-	if _, err := tx.Exec(createTable); err != nil {
-		return err
-	}
-
-	drop := true
-	if len(args) > 0 {
-		drop = args[0]
-	}
-	if drop {
-		dropTable := fmt.Sprintf("DROP TABLE %s.%s", label, table)
-		if _, err := tx.Exec(dropTable); err != nil {
-			return err
-		}
-		if _, err := tx.Exec(createTable); err != nil {
-			return err
-		}
-	}
-
-	for _, insertion := range insertions {
-		if _, err := tx.Exec(insertion); err != nil {
+		if _, err := tx.Exec(
+			fmt.Sprintf(
+				"INSERT INTO %s.%s (brickhouse_id,%s) VALUES ('%s',%s)",
+				label, table, fieldset, id, valueset,
+			),
+		); err != nil {
 			return err
 		}
 	}
