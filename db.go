@@ -97,6 +97,9 @@ func Write(db *sqlx.DB, label string, table Table, data *map[string]interface{},
 		return err
 	}
 
+	var fields []string
+	var values []string
+
 	// Drop the table if it exists
 	if _, check := db.Query(fmt.Sprintf("SELECT * FROM %s.%s", label, table)); check == nil && drop {
 		if _, err := db.Exec(fmt.Sprintf("DROP TABLE %s.%s", label, table)); err != nil {
@@ -104,24 +107,24 @@ func Write(db *sqlx.DB, label string, table Table, data *map[string]interface{},
 		}
 	}
 
-	// Get a fieldset from the keys of an arbitrary record and create the table
-	var fields []string
-	var values []string
-	i := 0
-	for _, v := range *data {
-		if i > 0 {
-			break
+	// Create the table (except for changes)
+	if table != Changes {
+		i := 0
+		for _, v := range *data {
+			if i > 0 {
+				break
+			}
+			for k := range v.(map[string]interface{}) {
+				fields = append(fields, k)
+			}
+			i++
 		}
-		for k := range v.(map[string]interface{}) {
-			fields = append(fields, k)
+		fieldset := createFieldset(fields)
+		if _, err := db.Exec(
+			fmt.Sprintf("CREATE TABLE IF NOT EXISTS %s.%s (brickhouse_id VARCHAR,%s)", label, table, fieldset),
+		); err != nil {
+			return err
 		}
-		i++
-	}
-	fieldset := createFieldset(fields)
-	if _, err := db.Exec(
-		fmt.Sprintf("CREATE TABLE IF NOT EXISTS %s.%s (brickhouse_id VARCHAR,%s)", label, table, fieldset),
-	); err != nil {
-		return err
 	}
 
 	tx, err := db.Begin()
