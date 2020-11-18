@@ -34,69 +34,63 @@ type Change struct {
 // The `args` variadic parameter is used for passing an optional ID value for nested comparisons.
 // Top-level comparisons do not need any ID, so no value needs to be explicitly passed by the user.
 func Compare(old map[string]interface{}, new map[string]interface{}, args ...string) []Change {
-	id := ""
-	if len(args) > 0 {
-		id = args[0]
-	}
-
-	matched := make(map[string]bool)
 	changes := make([]Change, 0)
 
-	for oldKey, oldValue := range old {
-		if _, in := matched[oldKey]; in {
-			continue
-		}
-
-		for newKey, newValue := range new {
-			if _, in := matched[newKey]; in {
-				continue
-			}
-
-			if oldKey == newKey {
-				matched[oldKey] = true
-
-				_, isOldValueTerminal := oldValue.(string)
-				_, isNewValueTerminal := newValue.(string)
-				if isOldValueTerminal && isNewValueTerminal && oldValue != newValue {
-					change := Change{
-						ID:        id,
-						Timestamp: time.Now(),
-						Operation: Modification,
-						Command:   "",
-						Old:       oldValue,
-						New:       newValue,
-					}
-					changes = append(changes, change)
-					break
-				} else if !reflect.DeepEqual(oldValue, newValue) {
-					subchanges := Compare(oldValue.(map[string]interface{}), newValue.(map[string]interface{}), oldKey)
-					changes = append(changes, subchanges...)
-				}
-			}
-		}
-	}
-
 	for key, value := range old {
-		if _, in := matched[key]; !in {
+		if _, in := new[key]; !in {
+			id := key
+			if len(args) > 0 {
+				id = args[0]
+			}
+
 			change := Change{
 				ID:        id,
 				Timestamp: time.Now(),
 				Operation: Deletion,
-				Command:   "temp",
+				Command:   "",
 				Old:       value,
 				New:       nil,
 			}
 			changes = append(changes, change)
+			continue
+		}
+
+		_, isOldValueTerminal := value.(string)
+		_, isNewValueTerminal := new[key].(string)
+		if isOldValueTerminal && isNewValueTerminal && value != new[key] {
+			id := key
+			if len(args) > 0 {
+				id = args[0]
+			}
+
+			change := Change{
+				ID:        id,
+				Timestamp: time.Now(),
+				Operation: Modification,
+				Command:   "",
+				Old:       value,
+				New:       new[key],
+			}
+			changes = append(changes, change)
+			break
+		} else if !reflect.DeepEqual(value, new[key]) {
+			subchanges := Compare(value.(map[string]interface{}), new[key].(map[string]interface{}), key)
+			changes = append(changes, subchanges...)
 		}
 	}
 
 	for key, value := range new {
-		if _, in := matched[key]; !in {
+		if _, in := old[key]; !in {
+			id := key
+			if len(args) > 0 {
+				id = args[0]
+			}
+
 			change := Change{
 				ID:        id,
 				Timestamp: time.Now(),
 				Operation: Addition,
-				Command:   "temp",
+				Command:   "",
 				Old:       nil,
 				New:       value,
 			}
