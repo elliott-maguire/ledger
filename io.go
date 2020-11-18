@@ -7,8 +7,27 @@ import (
 )
 
 // Update the store with new map[string]interface{}, register changes.
-func Update(db *sqlx.DB, label string, data *map[string]interface{}) (int, error) {
-	return 0, nil
+func Update(db *sqlx.DB, label string, data *map[string]interface{}) error {
+	old, err := Read(db, label, Live)
+	if err != nil {
+		return err
+	}
+
+	changes := Compare(*old, *data)
+	mappedChanges := make(map[string]interface{})
+	for _, change := range changes {
+		id, record := change.Map()
+		mappedChanges[id] = record
+	}
+	if err := Write(db, label, Changes, &mappedChanges, false); err != nil {
+		return err
+	}
+
+	if err := Write(db, label, Live, data); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // Restore the `archive` table to a given time.
