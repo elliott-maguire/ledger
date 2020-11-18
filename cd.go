@@ -1,7 +1,9 @@
 package brickhouse
 
 import (
+	"fmt"
 	"reflect"
+	"strings"
 	"time"
 )
 
@@ -22,6 +24,50 @@ type Change struct {
 	Operation Operation
 	Old       interface{}
 	New       interface{}
+}
+
+// Map a Change object to a map primitive.
+func (c Change) Map() (string, map[string]interface{}) {
+	out := make(map[string]interface{})
+
+	out["timestamp"] = c.Timestamp.Format(time.RFC3339)
+	out["operation"] = fmt.Sprintf("%d", c.Operation)
+
+	if c.Old != nil {
+		if reflect.TypeOf(c.Old).Kind() == reflect.Map {
+			cleaned := make([]string, 0)
+			for _, v := range c.Old.(map[string]interface{}) {
+				cleaned = append(cleaned, strings.ReplaceAll(v.(string), "'", "''"))
+			}
+
+			out["old"] = strings.Join(cleaned, ",")
+		} else if reflect.TypeOf(c.Old).Kind() == reflect.String {
+			out["old"] = c.Old.(string)
+		} else {
+			out["old"] = "INVALID TYPE"
+		}
+	} else {
+		out["old"] = ""
+	}
+
+	if c.New != nil {
+		if reflect.TypeOf(c.New).Kind() == reflect.Map {
+			cleaned := make([]string, 0)
+			for _, v := range c.New.(map[string]interface{}) {
+				cleaned = append(cleaned, strings.ReplaceAll(v.(string), "'", "''"))
+			}
+
+			out["new"] = strings.Join(cleaned, ",")
+		} else if reflect.TypeOf(c.New).Kind() == reflect.String {
+			out["new"] = c.New.(string)
+		} else {
+			out["new"] = "INVALID TYPE"
+		}
+	} else {
+		out["new"] = ""
+	}
+
+	return c.ID, out
 }
 
 // Compare two maps recursively and return the changes between them.
