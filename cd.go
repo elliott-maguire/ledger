@@ -42,65 +42,63 @@ func Compare(old map[string]interface{}, new map[string]interface{}, args ...str
 	matched := make(map[string]bool)
 	changes := make([]Change, 0)
 
-	for oK, oV := range old {
-		if _, in := matched[oK]; in {
+	for oldKey, oldValue := range old {
+		if _, in := matched[oldKey]; in {
 			continue
 		}
 
-		for nK, nV := range new {
-			if _, in := matched[nK]; in {
+		for newKey, newValue := range new {
+			if _, in := matched[newKey]; in {
 				continue
 			}
 
-			if oK == nK {
-				matched[oK] = true
+			if oldKey == newKey {
+				matched[oldKey] = true
 
-				_, isOVTerminal := oV.(string)
-				_, isNVTerminal := nV.(string)
-				if isOVTerminal && isNVTerminal && oV != nV {
+				_, isOldValueTerminal := oldValue.(string)
+				_, isNewValueTerminal := newValue.(string)
+				if isOldValueTerminal && isNewValueTerminal && oldValue != newValue {
 					change := Change{
 						ID:        id,
 						Timestamp: time.Now(),
 						Operation: Modification,
 						Command:   "",
-						Old:       oV,
-						New:       nV,
+						Old:       oldValue,
+						New:       newValue,
 					}
 					changes = append(changes, change)
 					break
-				} else if reflect.DeepEqual(oV, nV) {
-					continue
-				} else {
-					subchanges := Compare(oV.(map[string]interface{}), nV.(map[string]interface{}), oK)
+				} else if !reflect.DeepEqual(oldValue, newValue) {
+					subchanges := Compare(oldValue.(map[string]interface{}), newValue.(map[string]interface{}), oldKey)
 					changes = append(changes, subchanges...)
 				}
 			}
 		}
 	}
 
-	for k, v := range old {
-		if _, in := matched[k]; !in {
+	for key, value := range old {
+		if _, in := matched[key]; !in {
 			change := Change{
 				ID:        id,
 				Timestamp: time.Now(),
 				Operation: Deletion,
 				Command:   "temp",
-				Old:       v,
+				Old:       value,
 				New:       nil,
 			}
 			changes = append(changes, change)
 		}
 	}
 
-	for k, v := range new {
-		if _, in := matched[k]; !in {
+	for key, value := range new {
+		if _, in := matched[key]; !in {
 			change := Change{
 				ID:        id,
 				Timestamp: time.Now(),
 				Operation: Addition,
 				Command:   "temp",
 				Old:       nil,
-				New:       v,
+				New:       value,
 			}
 			changes = append(changes, change)
 		}
