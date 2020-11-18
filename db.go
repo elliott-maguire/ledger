@@ -12,11 +12,17 @@ const (
 	Changes
 )
 
-// Ensure the given store exists on the database and is accessible.
-func Ensure(db *sqlx.DB, label string) error
+// Ensure the given store exists on the map[string]interface{}base and is accessible.
+func Ensure(db *sqlx.DB, label string) error {
+	return nil
+}
 
 // Read from the indicated table in the labeled store.
-func Read(db *sqlx.DB, label string, table Table) (*[][]string, error)
+func Read(db *sqlx.DB, label string, table Table) (*[][]string, error) {
+	return nil, nil
+}
 
 // Write to the indicated table in the labeled store.
-func Write(db *sqlx.DB, label string, table Table, dataset Dataset, drop bool) error
+func Write(db *sqlx.DB, label string, table Table, data map[string]interface{}, drop bool) error {
+	return nil
+}
