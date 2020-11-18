@@ -20,7 +20,6 @@ type Change struct {
 	ID        string
 	Timestamp time.Time
 	Operation Operation
-	Command   string
 	Old       interface{}
 	New       interface{}
 }
@@ -49,7 +48,6 @@ func Compare(old map[string]interface{}, new map[string]interface{}, args ...str
 				ID:        id,
 				Timestamp: time.Now(),
 				Operation: Deletion,
-				Command:   "",
 				Old:       value,
 				New:       nil,
 			}
@@ -64,7 +62,6 @@ func Compare(old map[string]interface{}, new map[string]interface{}, args ...str
 				ID:        id,
 				Timestamp: time.Now(),
 				Operation: Modification,
-				Command:   "",
 				Old:       value,
 				New:       new[key],
 			}
@@ -89,7 +86,6 @@ func Compare(old map[string]interface{}, new map[string]interface{}, args ...str
 				ID:        id,
 				Timestamp: time.Now(),
 				Operation: Addition,
-				Command:   "",
 				Old:       nil,
 				New:       value,
 			}
