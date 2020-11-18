@@ -47,7 +47,7 @@ func setup() (*dockertest.Pool, *dockertest.Resource) {
 func TestEnsure(t *testing.T) {
 	pool, resource := setup()
 
-	if err := Ensure(db, "test", "foo", "bar", "baz"); err != nil {
+	if err := Ensure(db, "test"); err != nil {
 		t.Error(err)
 	}
 
@@ -91,7 +91,7 @@ func TestRead(t *testing.T) {
 		},
 	}
 
-	if err := Write(db, "test", Live, dIn, true); err != nil {
+	if err := Write(db, "test", Live, &dIn); err != nil {
 		t.Error(err)
 	}
 
@@ -131,7 +131,7 @@ func TestWrite(t *testing.T) {
 		},
 	}
 
-	if err := Write(db, "test", Live, d, true); err != nil {
+	if err := Write(db, "test", Live, &d); err != nil {
 		t.Error(err)
 	}
 
