@@ -37,12 +37,14 @@ func Compare(old map[string]interface{}, new map[string]interface{}, args ...str
 	changes := make([]Change, 0)
 
 	for key, value := range old {
-		if _, in := new[key]; !in {
-			id := key
-			if len(args) > 0 {
-				id = args[0]
-			}
+		id := ""
+		if len(args) > 0 {
+			id = args[0] + "." + key
+		} else {
+			id = key
+		}
 
+		if _, in := new[key]; !in {
 			change := Change{
 				ID:        id,
 				Timestamp: time.Now(),
@@ -58,11 +60,6 @@ func Compare(old map[string]interface{}, new map[string]interface{}, args ...str
 		_, isOldValueTerminal := value.(string)
 		_, isNewValueTerminal := new[key].(string)
 		if isOldValueTerminal && isNewValueTerminal && value != new[key] {
-			id := key
-			if len(args) > 0 {
-				id = args[0]
-			}
-
 			change := Change{
 				ID:        id,
 				Timestamp: time.Now(),
@@ -80,12 +77,14 @@ func Compare(old map[string]interface{}, new map[string]interface{}, args ...str
 	}
 
 	for key, value := range new {
-		if _, in := old[key]; !in {
-			id := key
-			if len(args) > 0 {
-				id = args[0]
-			}
+		id := ""
+		if len(args) > 0 {
+			id = args[0] + "." + key
+		} else {
+			id = key
+		}
 
+		if _, in := old[key]; !in {
 			change := Change{
 				ID:        id,
 				Timestamp: time.Now(),
