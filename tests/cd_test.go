@@ -1,8 +1,9 @@
-package brickhouse
+package tests
 
 import (
-	"fmt"
 	"testing"
+
+	"github.com/sr-revops/brickhouse"
 )
 
 func TestCompare(t *testing.T) {
@@ -41,10 +42,8 @@ func TestCompare(t *testing.T) {
 		},
 	}
 
-	changes := Compare(d1, d2)
+	changes := brickhouse.Compare(d1, d2)
 	if len(changes) != 5 {
 		t.Error("failed")
-	} else {
-		fmt.Println(changes)
 	}
 }

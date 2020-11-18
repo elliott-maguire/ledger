@@ -1,15 +1,13 @@
-package brickhouse
+package tests
 
 import (
-	"log"
 	"testing"
 
 	_ "github.com/lib/pq" // postgres driver
+	"github.com/sr-revops/brickhouse"
 )
 
 func TestUpdate(t *testing.T) {
-	pool, resource := setup()
-
 	d := map[string]interface{}{
 		"1": map[string]interface{}{
 			"a": "foo",
@@ -28,12 +26,7 @@ func TestUpdate(t *testing.T) {
 		},
 	}
 
-	if err := Update(db, "test", &d); err != nil {
+	if err := brickhouse.Update(db, "test", &d); err != nil {
 		t.Error(err)
 	}
-
-	if err := pool.Purge(resource); err != nil {
-		log.Fatalf("Could not purge resource: %s", err)
-	}
-	resource.Close()
 }
