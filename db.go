@@ -63,11 +63,10 @@ func Read(db *sqlx.DB, label string, table Table) (*map[string]interface{}, erro
 		return nil, err
 	}
 
-	selectAll := fmt.Sprintf("SELECT * FROM %s.%s", label, table)
-	rows, err := db.Queryx(selectAll)
+	rows, err := db.Queryx(fmt.Sprintf("SELECT * FROM %s.%s", label, table))
 	if err != nil {
 		if _, is := err.(*pq.Error); is && err.(*pq.Error).Code == "42P01" {
-			out := make(map[string]interface{})
+			out := map[string]interface{}{}
 			return &out, nil
 		}
 
@@ -75,9 +74,9 @@ func Read(db *sqlx.DB, label string, table Table) (*map[string]interface{}, erro
 	}
 
 	// Scan rows into maps, extract record ID, add to data map
-	data := make(map[string]interface{})
-	record := make(map[string]interface{})
+	data := map[string]interface{}{}
 	for rows.Next() {
+		record := map[string]interface{}{}
 		if err := rows.MapScan(record); err != nil {
 			return nil, err
 		}
@@ -100,14 +99,13 @@ func Write(db *sqlx.DB, label string, table Table, data *map[string]interface{},
 	var fields []string
 	var values []string
 
-	// Drop the table if it exists
-	if _, check := db.Query(fmt.Sprintf("SELECT * FROM %s.%s", label, table)); check == nil && drop {
-		if _, err := db.Exec(fmt.Sprintf("DROP TABLE %s.%s", label, table)); err != nil {
+	if drop {
+		_, err := db.Exec(fmt.Sprintf("DROP TABLE %s.%s", label, table))
+		if _, is := err.(*pq.Error); is && err.(*pq.Error).Code != "42P01" && err != nil {
 			return err
 		}
 	}
 
-	// Create the table (except for changes)
 	if table != Changes {
 		i := 0
 		for _, v := range *data {

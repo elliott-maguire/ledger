@@ -1,6 +1,7 @@
 package tests
 
 import (
+	"fmt"
 	"reflect"
 	"testing"
 
@@ -28,7 +29,7 @@ func TestEnsure(t *testing.T) {
 }
 
 func TestRead(t *testing.T) {
-	dIn := map[string]interface{}{
+	d1 := map[string]interface{}{
 		"1": map[string]interface{}{
 			"a": "foo",
 			"b": "bar",
@@ -45,18 +46,90 @@ func TestRead(t *testing.T) {
 			"c": "baz",
 		},
 	}
+	d2 := map[string]interface{}{
+		"1": map[string]interface{}{
+			"a": "zoo",
+			"b": "bar",
+			"c": "baz",
+		},
+		"3": map[string]interface{}{
+			"a": "bar",
+			"b": "baz",
+			"c": "zoo",
+		},
+		"4": map[string]interface{}{
+			"a": "foo",
+			"b": "bar",
+			"c": "baz",
+		},
+	}
+	d3 := map[string]interface{}{
+		"1": map[string]interface{}{
+			"a": "foo",
+			"b": "bar",
+			"d": "foo",
+		},
+		"3": map[string]interface{}{
+			"a": "zar",
+			"b": "baz",
+			"d": "bar",
+		},
+		"4": map[string]interface{}{
+			"a": "foo",
+			"b": "bar",
+			"d": "baz",
+		},
+	}
 
-	if err := brickhouse.Write(db, "test", brickhouse.Live, &dIn, true); err != nil {
+	if err := brickhouse.Write(db, "TestRead", brickhouse.Live, &d1, true); err != nil {
 		t.Error(err)
 	}
 
-	dOut, err := brickhouse.Read(db, "test", brickhouse.Live)
+	d1Out, err := brickhouse.Read(db, "TestRead", brickhouse.Live)
 	if err != nil {
 		t.Error(err)
 	}
 
-	if !reflect.DeepEqual(dIn, *dOut) {
-		t.Error("read failed")
+	if !reflect.DeepEqual(d1, *d1Out) {
+		fmt.Println(d1)
+		fmt.Println(*d1Out)
+		t.Error("d1 read failed")
+	} else {
+		t.Log("d1 read succeeded")
+	}
+
+	if err := brickhouse.Write(db, "TestRead", brickhouse.Live, &d2, true); err != nil {
+		t.Error(err)
+	}
+
+	d2Out, err := brickhouse.Read(db, "TestRead", brickhouse.Live)
+	if err != nil {
+		t.Error(err)
+	}
+
+	if !reflect.DeepEqual(d2, *d2Out) {
+		fmt.Println(d2)
+		fmt.Println(*d2Out)
+		t.Error("d2 read failed")
+	} else {
+		t.Log("d2 read succeeded")
+	}
+
+	if err := brickhouse.Write(db, "TestRead", brickhouse.Live, &d3, true); err != nil {
+		t.Error(err)
+	}
+
+	d3out, err := brickhouse.Read(db, "TestRead", brickhouse.Live)
+	if err != nil {
+		t.Error(err)
+	}
+
+	if !reflect.DeepEqual(d3, *d3out) {
+		fmt.Println(d3)
+		fmt.Println(*d3out)
+		t.Error("d3 read failed")
+	} else {
+		t.Log("d3 read succeeded")
 	}
 }
 
@@ -79,7 +152,7 @@ func TestWrite(t *testing.T) {
 		},
 	}
 
-	if err := brickhouse.Write(db, "test", brickhouse.Live, &d, true); err != nil {
+	if err := brickhouse.Write(db, "TestWrite", brickhouse.Live, &d, true); err != nil {
 		t.Error(err)
 	}
 }
