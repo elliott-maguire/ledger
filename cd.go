@@ -34,7 +34,7 @@ func (t ByTimestamp) Swap(i, j int)      { t[i], t[j] = t[j], t[i] }
 func (t ByTimestamp) Less(i, j int) bool { return t[i].Timestamp.After(t[j].Timestamp) }
 
 // Map a Change object to a map primitive.
-func (c Change) Map() (string, map[string]interface{}) {
+func (c Change) Map() (string, *map[string]interface{}) {
 	out := make(map[string]interface{})
 
 	out["timestamp"] = c.Timestamp.Format(time.RFC3339Nano)
@@ -66,7 +66,7 @@ func (c Change) Map() (string, map[string]interface{}) {
 		out["new"] = ""
 	}
 
-	return c.ID, out
+	return c.ID, &out
 }
 
 // Compare two maps recursively and return the changes between them.
