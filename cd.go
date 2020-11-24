@@ -1,9 +1,9 @@
 package brickhouse
 
 import (
+	"encoding/json"
 	"fmt"
 	"reflect"
-	"strings"
 	"time"
 )
 
@@ -26,21 +26,24 @@ type Change struct {
 	New       interface{}
 }
 
+// ByTimestamp is a native sort.Interface implementation for sorting by timestamp.
+type ByTimestamp []Change
+
+func (t ByTimestamp) Len() int           { return len(t) }
+func (t ByTimestamp) Swap(i, j int)      { t[i], t[j] = t[j], t[i] }
+func (t ByTimestamp) Less(i, j int) bool { return t[i].Timestamp.After(t[j].Timestamp) }
+
 // Map a Change object to a map primitive.
 func (c Change) Map() (string, map[string]interface{}) {
 	out := make(map[string]interface{})
 
-	out["timestamp"] = c.Timestamp.Format(time.RFC3339)
+	out["timestamp"] = c.Timestamp.Format(time.RFC3339Nano)
 	out["operation"] = fmt.Sprintf("%d", c.Operation)
 
 	if c.Old != nil {
 		if reflect.TypeOf(c.Old).Kind() == reflect.Map {
-			cleaned := make([]string, 0)
-			for _, v := range c.Old.(map[string]interface{}) {
-				cleaned = append(cleaned, strings.ReplaceAll(v.(string), "'", "''"))
-			}
-
-			out["old"] = strings.Join(cleaned, ",")
+			dump, _ := json.Marshal(c.Old.(map[string]interface{}))
+			out["old"] = string(dump)
 		} else if reflect.TypeOf(c.Old).Kind() == reflect.String {
 			out["old"] = c.Old.(string)
 		} else {
@@ -52,12 +55,8 @@ func (c Change) Map() (string, map[string]interface{}) {
 
 	if c.New != nil {
 		if reflect.TypeOf(c.New).Kind() == reflect.Map {
-			cleaned := make([]string, 0)
-			for _, v := range c.New.(map[string]interface{}) {
-				cleaned = append(cleaned, strings.ReplaceAll(v.(string), "'", "''"))
-			}
-
-			out["new"] = strings.Join(cleaned, ",")
+			dump, _ := json.Marshal(c.New.(map[string]interface{}))
+			out["new"] = string(dump)
 		} else if reflect.TypeOf(c.New).Kind() == reflect.String {
 			out["new"] = c.New.(string)
 		} else {
@@ -78,18 +77,18 @@ func (c Change) Map() (string, map[string]interface{}) {
 //
 // The `args` variadic parameter is used for passing an optional ID value for nested comparisons.
 // Top-level comparisons do not need any ID, so no value needs to be explicitly passed by the user.
-func Compare(old map[string]interface{}, new map[string]interface{}, args ...string) []Change {
-	changes := make([]Change, 0)
+func Compare(old *map[string]interface{}, new *map[string]interface{}, args ...string) []Change {
+	var changes []Change
 
-	for key, value := range old {
-		id := ""
+	for key, value := range *old {
+		var id string
 		if len(args) > 0 {
-			id = args[0] + "." + key
+			id = args[0] + ":" + key
 		} else {
 			id = key
 		}
 
-		if _, in := new[key]; !in {
+		if _, in := (*new)[key]; !in {
 			change := Change{
 				ID:        id,
 				Timestamp: time.Now(),
@@ -102,32 +101,35 @@ func Compare(old map[string]interface{}, new map[string]interface{}, args ...str
 		}
 
 		_, isOldValueTerminal := value.(string)
-		_, isNewValueTerminal := new[key].(string)
-		if isOldValueTerminal && isNewValueTerminal && value != new[key] {
+		_, isNewValueTerminal := (*new)[key].(string)
+		if isOldValueTerminal && isNewValueTerminal && value != (*new)[key] {
 			change := Change{
 				ID:        id,
 				Timestamp: time.Now(),
 				Operation: Modification,
 				Old:       value,
-				New:       new[key],
+				New:       (*new)[key],
 			}
 			changes = append(changes, change)
 			break
-		} else if !reflect.DeepEqual(value, new[key]) {
-			subchanges := Compare(value.(map[string]interface{}), new[key].(map[string]interface{}), key)
+		} else if !reflect.DeepEqual(value, (*new)[key]) {
+			ov := value.(map[string]interface{})
+			nv := (*new)[key].(map[string]interface{})
+
+			subchanges := Compare(&ov, &nv, key)
 			changes = append(changes, subchanges...)
 		}
 	}
 
-	for key, value := range new {
-		id := ""
+	for key, value := range *new {
+		var id string
 		if len(args) > 0 {
-			id = args[0] + "." + key
+			id = args[0] + ":" + key
 		} else {
 			id = key
 		}
 
-		if _, in := old[key]; !in {
+		if _, in := (*old)[key]; !in {
 			change := Change{
 				ID:        id,
 				Timestamp: time.Now(),
