@@ -37,32 +37,32 @@ func TestUpdate(t *testing.T) {
 func TestRestore(t *testing.T) {
 	targetTimes := map[string]time.Time{}
 	testSets := map[string]map[string]interface{}{
-		"base": map[string]interface{}{
+		"base": {
 			"abc": map[string]interface{}{
 				"name":  "Joe Schmoe",
 				"email": "j.schmoe@gmail.com",
 			},
 		},
-		"cellModification": map[string]interface{}{
+		"cellModification": {
 			"abc": map[string]interface{}{
 				"name":  "Joe Schmoe",
 				"email": "j@protonmail.ch",
 			},
 		},
-		"cellAddition": map[string]interface{}{
+		"cellAddition": {
 			"abc": map[string]interface{}{
 				"name":  "Joe Schmoe",
 				"email": "j@protonmail.ch",
 				"phone": "012-345-6789",
 			},
 		},
-		"cellDeletion": map[string]interface{}{
+		"cellDeletion": {
 			"abc": map[string]interface{}{
 				"name":  "Joe Schmoe",
 				"phone": "012-345-6789",
 			},
 		},
-		"recordAddition": map[string]interface{}{
+		"recordAddition": {
 			"abc": map[string]interface{}{
 				"name":  "Joe Schmoe",
 				"phone": "012-345-6789",
@@ -72,7 +72,7 @@ func TestRestore(t *testing.T) {
 				"phone": "987-654-3210",
 			},
 		},
-		"recordDeletion": map[string]interface{}{
+		"recordDeletion": {
 			"def": map[string]interface{}{
 				"name":  "Moe Schloe",
 				"phone": "987-654-3210",
