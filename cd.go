@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"reflect"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 // Operation is a pseudo-enumerator for indicating operation type.
@@ -20,6 +22,7 @@ const (
 // Change is a flexible structure that represents a single atomic change to a row or cell.
 type Change struct {
 	ID        string
+	Keychain  string
 	Timestamp time.Time
 	Operation Operation
 	Old       interface{}
@@ -35,8 +38,9 @@ func (t ByTimestamp) Less(i, j int) bool { return t[i].Timestamp.After(t[j].Time
 
 // Map a Change object to a map primitive.
 func (c Change) Map() (string, *map[string]interface{}) {
-	out := make(map[string]interface{})
+	out := map[string]interface{}{}
 
+	out["keychain"] = c.Keychain
 	out["timestamp"] = c.Timestamp.Format(time.RFC3339Nano)
 	out["operation"] = fmt.Sprintf("%d", c.Operation)
 
@@ -81,16 +85,18 @@ func Compare(old *map[string]interface{}, new *map[string]interface{}, args ...s
 	var changes []Change
 
 	for key, value := range *old {
-		var id string
+		var keychain string
 		if len(args) > 0 {
-			id = args[0] + ":" + key
+			keychain = args[0] + ":" + key
 		} else {
-			id = key
+			keychain = key
 		}
 
 		if _, in := (*new)[key]; !in {
+			id, _ := uuid.NewUUID()
 			change := Change{
-				ID:        id,
+				ID:        id.String(),
+				Keychain:  keychain,
 				Timestamp: time.Now(),
 				Operation: Deletion,
 				Old:       value,
@@ -103,8 +109,10 @@ func Compare(old *map[string]interface{}, new *map[string]interface{}, args ...s
 		_, isOldValueTerminal := value.(string)
 		_, isNewValueTerminal := (*new)[key].(string)
 		if isOldValueTerminal && isNewValueTerminal && value != (*new)[key] {
+			id, _ := uuid.NewUUID()
 			change := Change{
-				ID:        id,
+				ID:        id.String(),
+				Keychain:  keychain,
 				Timestamp: time.Now(),
 				Operation: Modification,
 				Old:       value,
@@ -122,16 +130,18 @@ func Compare(old *map[string]interface{}, new *map[string]interface{}, args ...s
 	}
 
 	for key, value := range *new {
-		var id string
+		var keychain string
 		if len(args) > 0 {
-			id = args[0] + ":" + key
+			keychain = args[0] + ":" + key
 		} else {
-			id = key
+			keychain = key
 		}
 
 		if _, in := (*old)[key]; !in {
+			id, _ := uuid.NewUUID()
 			change := Change{
-				ID:        id,
+				ID:        id.String(),
+				Keychain:  keychain,
 				Timestamp: time.Now(),
 				Operation: Addition,
 				Old:       nil,

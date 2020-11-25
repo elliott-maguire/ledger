@@ -45,7 +45,7 @@ func Ensure(db *sqlx.DB, label string) error {
 	}
 
 	createChangesTable := "CREATE TABLE IF NOT EXISTS %s.%s (%s)"
-	fieldset := createFieldset([]string{"brickhouse_id", "timestamp", "operation", "old", "new"})
+	fieldset := createFieldset([]string{"brickhouse_id", "keychain", "timestamp", "operation", "old", "new"})
 	if _, err := tx.Exec(fmt.Sprintf(createChangesTable, label, Changes, fieldset)); err != nil {
 		return err
 	}
