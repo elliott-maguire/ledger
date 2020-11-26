@@ -36,8 +36,8 @@ func (t ByTimestamp) Len() int           { return len(t) }
 func (t ByTimestamp) Swap(i, j int)      { t[i], t[j] = t[j], t[i] }
 func (t ByTimestamp) Less(i, j int) bool { return t[i].Timestamp.After(t[j].Timestamp) }
 
-// Map a Change object to a map primitive.
-func (c Change) Map() (string, *map[string]interface{}) {
+// Map a Change object to a map primitive and return it with an ID.
+func (c Change) Map() (string, map[string]interface{}) {
 	out := map[string]interface{}{}
 
 	out["keychain"] = c.Keychain
@@ -70,7 +70,7 @@ func (c Change) Map() (string, *map[string]interface{}) {
 		out["new"] = ""
 	}
 
-	return c.ID, &out
+	return c.ID, out
 }
 
 // Compare two maps recursively and return the changes between them.
@@ -81,10 +81,10 @@ func (c Change) Map() (string, *map[string]interface{}) {
 //
 // The `args` variadic parameter is used for passing an optional ID value for nested comparisons.
 // Top-level comparisons do not need any ID, so no value needs to be explicitly passed by the user.
-func Compare(old *map[string]interface{}, new *map[string]interface{}, args ...string) []Change {
+func Compare(old map[string]interface{}, new map[string]interface{}, args ...string) []Change {
 	var changes []Change
 
-	for key, value := range *old {
+	for key, value := range old {
 		var keychain string
 		if len(args) > 0 {
 			keychain = args[0] + ":" + key
@@ -92,7 +92,7 @@ func Compare(old *map[string]interface{}, new *map[string]interface{}, args ...s
 			keychain = key
 		}
 
-		if _, in := (*new)[key]; !in {
+		if _, in := new[key]; !in {
 			id, _ := uuid.NewUUID()
 			change := Change{
 				ID:        id.String(),
@@ -107,8 +107,8 @@ func Compare(old *map[string]interface{}, new *map[string]interface{}, args ...s
 		}
 
 		_, isOldValueTerminal := value.(string)
-		_, isNewValueTerminal := (*new)[key].(string)
-		if isOldValueTerminal && isNewValueTerminal && value != (*new)[key] {
+		_, isNewValueTerminal := new[key].(string)
+		if isOldValueTerminal && isNewValueTerminal && value != new[key] {
 			id, _ := uuid.NewUUID()
 			change := Change{
 				ID:        id.String(),
@@ -116,20 +116,20 @@ func Compare(old *map[string]interface{}, new *map[string]interface{}, args ...s
 				Timestamp: time.Now(),
 				Operation: Modification,
 				Old:       value,
-				New:       (*new)[key],
+				New:       new[key],
 			}
 			changes = append(changes, change)
 			break
-		} else if !reflect.DeepEqual(value, (*new)[key]) {
+		} else if !reflect.DeepEqual(value, new[key]) {
 			ov := value.(map[string]interface{})
-			nv := (*new)[key].(map[string]interface{})
+			nv := new[key].(map[string]interface{})
 
-			subchanges := Compare(&ov, &nv, key)
+			subchanges := Compare(ov, nv, key)
 			changes = append(changes, subchanges...)
 		}
 	}
 
-	for key, value := range *new {
+	for key, value := range new {
 		var keychain string
 		if len(args) > 0 {
 			keychain = args[0] + ":" + key
@@ -137,7 +137,7 @@ func Compare(old *map[string]interface{}, new *map[string]interface{}, args ...s
 			keychain = key
 		}
 
-		if _, in := (*old)[key]; !in {
+		if _, in := old[key]; !in {
 			id, _ := uuid.NewUUID()
 			change := Change{
 				ID:        id.String(),

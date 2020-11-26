@@ -58,7 +58,7 @@ func Ensure(db *sqlx.DB, label string) error {
 }
 
 // Read from the indicated table in the labeled store.
-func Read(db *sqlx.DB, label string, table Table) (*map[string]interface{}, error) {
+func Read(db *sqlx.DB, label string, table Table) (map[string]interface{}, error) {
 	if err := Ensure(db, label); err != nil {
 		return nil, err
 	}
@@ -66,8 +66,7 @@ func Read(db *sqlx.DB, label string, table Table) (*map[string]interface{}, erro
 	rows, err := db.Queryx(fmt.Sprintf("SELECT * FROM %s.%s", label, table))
 	if err != nil {
 		if _, is := err.(*pq.Error); is && err.(*pq.Error).Code == "42P01" {
-			out := map[string]interface{}{}
-			return &out, nil
+			return map[string]interface{}{}, nil
 		}
 
 		return nil, err
@@ -87,17 +86,14 @@ func Read(db *sqlx.DB, label string, table Table) (*map[string]interface{}, erro
 		}
 	}
 
-	return &data, nil
+	return data, nil
 }
 
 // Write to the indicated table in the labeled store.
-func Write(db *sqlx.DB, label string, table Table, data *map[string]interface{}, drop bool) error {
+func Write(db *sqlx.DB, label string, table Table, data map[string]interface{}, drop bool) error {
 	if err := Ensure(db, label); err != nil {
 		return err
 	}
-
-	var fields []string
-	var values []string
 
 	if drop {
 		_, err := db.Exec(fmt.Sprintf("DROP TABLE %s.%s", label, table))
@@ -107,8 +103,9 @@ func Write(db *sqlx.DB, label string, table Table, data *map[string]interface{},
 	}
 
 	if table != Changes {
+		fields := make([]string, 0)
 		i := 0
-		for _, v := range *data {
+		for _, v := range data {
 			if i > 0 {
 				break
 			}
@@ -131,12 +128,12 @@ func Write(db *sqlx.DB, label string, table Table, data *map[string]interface{},
 	}
 	defer tx.Rollback()
 
-	for id, record := range *data {
-		fields = []string{}
-		values = []string{}
+	for id, record := range data {
+		fields := make([]string, 0)
+		values := make([]string, 0)
 
 		for k, v := range record.(map[string]interface{}) {
-			fields = append(fields, k)
+			fields = append(fields, reField.ReplaceAllString(k, ""))
 			values = append(values, fmt.Sprintf("'%s'", reValue.ReplaceAllString(v.(string), "")))
 		}
 
