@@ -2,13 +2,15 @@ package tests
 
 import (
 	"encoding/csv"
+	"errors"
 	"github.com/jmoiron/sqlx"
 	"github.com/sr-revops/brickhouse"
 	"os"
 	"testing"
+	"time"
 )
 
-func TestFull(t *testing.T) {
+func TestStressUpdate(t *testing.T) {
 	f, err := os.Open("temp.large.csv")
 	if err != nil {
 		panic(err)
@@ -35,7 +37,22 @@ func TestFull(t *testing.T) {
 	}
 	defer db.Close()
 
-	if err := brickhouse.Update(db, "t1", &data); err != nil {
+	if err := brickhouse.Update(db, "thrutest", data); err != nil {
 		t.Error(err)
+	}
+	target := time.Now()
+
+	for i := 1; i < len(data)/2; i++ {
+		delete(data, raw[i][18])
+	}
+
+	if err := brickhouse.Update(db, "thrutest", data); err != nil {
+		t.Error(err)
+	}
+
+	if out, err := brickhouse.Restore(db, "thrutest", target); err != nil {
+		t.Error(err)
+	} else if len(out) == len(data) {
+		t.Error(errors.New("deletions didn't work"))
 	}
 }
