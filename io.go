@@ -1,4 +1,4 @@
-package brickhouse
+package bricks
 
 import (
 	"encoding/json"

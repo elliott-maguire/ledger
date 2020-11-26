@@ -3,7 +3,7 @@ package tests
 import (
 	"testing"
 
-	"github.com/sr-revops/brickhouse"
+	"github.com/sr-revops/bricks"
 )
 
 func TestCompare(t *testing.T) {
@@ -42,7 +42,7 @@ func TestCompare(t *testing.T) {
 		},
 	}
 
-	changes := brickhouse.Compare(d1, d2)
+	changes := bricks.Compare(d1, d2)
 	if len(changes) != 5 {
 		t.Error("failed")
 	}

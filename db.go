@@ -1,4 +1,4 @@
-package brickhouse
+package bricks
 
 import (
 	"fmt"
@@ -45,7 +45,7 @@ func Ensure(db *sqlx.DB, label string) error {
 	}
 
 	createChangesTable := "CREATE TABLE IF NOT EXISTS %s.%s (%s)"
-	fieldset := createFieldset([]string{"brickhouse_id", "keychain", "timestamp", "operation", "old", "new"})
+	fieldset := createFieldset([]string{"bricks_id", "keychain", "timestamp", "operation", "old", "new"})
 	if _, err := tx.Exec(fmt.Sprintf(createChangesTable, label, Changes, fieldset)); err != nil {
 		return err
 	}
@@ -80,8 +80,8 @@ func Read(db *sqlx.DB, label string, table Table) (map[string]interface{}, error
 			return nil, err
 		}
 
-		if id, in := record["brickhouse_id"]; in {
-			delete(record, "brickhouse_id")
+		if id, in := record["bricks_id"]; in {
+			delete(record, "bricks_id")
 			data[id.(string)] = record
 		}
 	}
@@ -116,7 +116,7 @@ func Write(db *sqlx.DB, label string, table Table, data map[string]interface{}, 
 		}
 		fieldset := createFieldset(fields)
 		if _, err := db.Exec(
-			fmt.Sprintf("CREATE TABLE IF NOT EXISTS %s.%s (brickhouse_id VARCHAR,%s)", label, table, fieldset),
+			fmt.Sprintf("CREATE TABLE IF NOT EXISTS %s.%s (bricks_id VARCHAR,%s)", label, table, fieldset),
 		); err != nil {
 			return err
 		}
@@ -142,7 +142,7 @@ func Write(db *sqlx.DB, label string, table Table, data map[string]interface{}, 
 
 		if _, err := tx.Exec(
 			fmt.Sprintf(
-				"INSERT INTO %s.%s (brickhouse_id,%s) VALUES ('%s',%s)",
+				"INSERT INTO %s.%s (bricks_id,%s) VALUES ('%s',%s)",
 				label, table, fieldset, id, valueset,
 			),
 		); err != nil {

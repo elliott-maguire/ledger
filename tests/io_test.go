@@ -8,13 +8,13 @@ import (
 
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq" // postgres driver
-	"github.com/sr-revops/brickhouse"
+	"github.com/sr-revops/bricks"
 )
 
 func TestUpdate(t *testing.T) {
 	db, err := sqlx.Open(
 		"postgres",
-		"postgresql://postgres:dev@localhost:5432/brickhouse?sslmode=disable")
+		"postgresql://postgres:dev@localhost:5432/bricks?sslmode=disable")
 	if err != nil {
 		t.Error(err)
 	}
@@ -38,7 +38,7 @@ func TestUpdate(t *testing.T) {
 		},
 	}
 
-	if err := brickhouse.Update(db, "testupdate", testData); err != nil {
+	if err := bricks.Update(db, "testupdate", testData); err != nil {
 		t.Error(err)
 	}
 }
@@ -46,7 +46,7 @@ func TestUpdate(t *testing.T) {
 func TestRestore(t *testing.T) {
 	db, err := sqlx.Open(
 		"postgres",
-		"postgresql://postgres:dev@localhost:5432/brickhouse?sslmode=disable")
+		"postgresql://postgres:dev@localhost:5432/bricks?sslmode=disable")
 	if err != nil {
 		t.Error(err)
 	}
@@ -98,14 +98,14 @@ func TestRestore(t *testing.T) {
 	}
 
 	for operation, data := range testSets {
-		if err := brickhouse.Update(db, "TestRestore", data); err != nil {
+		if err := bricks.Update(db, "TestRestore", data); err != nil {
 			t.Error(err)
 		}
 		targetTimes[operation] = time.Now()
 	}
 
 	for operation, targetTime := range targetTimes {
-		if outData, err := brickhouse.Restore(db, "TestRestore", targetTime); err != nil {
+		if outData, err := bricks.Restore(db, "TestRestore", targetTime); err != nil {
 			t.Error(err)
 		} else {
 			if !reflect.DeepEqual(outData, testSets[operation]) {

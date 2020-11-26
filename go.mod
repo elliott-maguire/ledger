@@ -1,4 +1,4 @@
-module github.com/sr-revops/brickhouse
+module github.com/sr-revops/bricks
 
 go 1.15
 

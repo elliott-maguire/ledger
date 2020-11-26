@@ -7,19 +7,19 @@ import (
 
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq" // postgres driver
-	"github.com/sr-revops/brickhouse"
+	"github.com/sr-revops/bricks"
 )
 
 func TestEnsure(t *testing.T) {
 	db, err := sqlx.Open(
 		"postgres",
-		"postgresql://postgres:dev@localhost:5432/brickhouse?sslmode=disable")
+		"postgresql://postgres:dev@localhost:5432/bricks?sslmode=disable")
 	if err != nil {
 		t.Error(err)
 	}
 	defer db.Close()
 
-	if err := brickhouse.Ensure(db, "testensure"); err != nil {
+	if err := bricks.Ensure(db, "testensure"); err != nil {
 		t.Error(err)
 	}
 
@@ -40,7 +40,7 @@ func TestEnsure(t *testing.T) {
 func TestRead(t *testing.T) {
 	db, err := sqlx.Open(
 		"postgres",
-		"postgresql://postgres:dev@localhost:5432/brickhouse?sslmode=disable")
+		"postgresql://postgres:dev@localhost:5432/bricks?sslmode=disable")
 	if err != nil {
 		t.Error(err)
 	}
@@ -98,11 +98,11 @@ func TestRead(t *testing.T) {
 		},
 	}
 
-	if err := brickhouse.Write(db, "testread", brickhouse.Live, d1, true); err != nil {
+	if err := bricks.Write(db, "testread", bricks.Live, d1, true); err != nil {
 		t.Error(err)
 	}
 
-	d1Out, err := brickhouse.Read(db, "testread", brickhouse.Live)
+	d1Out, err := bricks.Read(db, "testread", bricks.Live)
 	if err != nil {
 		t.Error(err)
 	}
@@ -115,11 +115,11 @@ func TestRead(t *testing.T) {
 		t.Log("d1 read succeeded")
 	}
 
-	if err := brickhouse.Write(db, "testread", brickhouse.Live, d2, true); err != nil {
+	if err := bricks.Write(db, "testread", bricks.Live, d2, true); err != nil {
 		t.Error(err)
 	}
 
-	d2Out, err := brickhouse.Read(db, "testread", brickhouse.Live)
+	d2Out, err := bricks.Read(db, "testread", bricks.Live)
 	if err != nil {
 		t.Error(err)
 	}
@@ -132,11 +132,11 @@ func TestRead(t *testing.T) {
 		t.Log("d2 read succeeded")
 	}
 
-	if err := brickhouse.Write(db, "testread", brickhouse.Live, d3, true); err != nil {
+	if err := bricks.Write(db, "testread", bricks.Live, d3, true); err != nil {
 		t.Error(err)
 	}
 
-	d3out, err := brickhouse.Read(db, "testread", brickhouse.Live)
+	d3out, err := bricks.Read(db, "testread", bricks.Live)
 	if err != nil {
 		t.Error(err)
 	}
@@ -153,7 +153,7 @@ func TestRead(t *testing.T) {
 func TestWrite(t *testing.T) {
 	db, err := sqlx.Open(
 		"postgres",
-		"postgresql://postgres:dev@localhost:5432/brickhouse?sslmode=disable")
+		"postgresql://postgres:dev@localhost:5432/bricks?sslmode=disable")
 	if err != nil {
 		t.Error(err)
 	}
@@ -177,7 +177,7 @@ func TestWrite(t *testing.T) {
 		},
 	}
 
-	if err := brickhouse.Write(db, "testwrite", brickhouse.Live, d, true); err != nil {
+	if err := bricks.Write(db, "testwrite", bricks.Live, d, true); err != nil {
 		t.Error(err)
 	}
 }
