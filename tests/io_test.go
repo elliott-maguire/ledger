@@ -2,6 +2,7 @@ package tests
 
 import (
 	"fmt"
+	"github.com/jmoiron/sqlx"
 	"reflect"
 	"testing"
 	"time"
@@ -11,6 +12,14 @@ import (
 )
 
 func TestUpdate(t *testing.T) {
+	db, err := sqlx.Open(
+		"postgres",
+		"postgresql://postgres:dev@localhost:5432/brickhouse?sslmode=disable")
+	if err != nil {
+		t.Error(err)
+	}
+	defer db.Close()
+
 	testData := map[string]interface{}{
 		"1": map[string]interface{}{
 			"a": "foo",
@@ -29,12 +38,20 @@ func TestUpdate(t *testing.T) {
 		},
 	}
 
-	if err := brickhouse.Update(db, "TestUpdate", &testData); err != nil {
+	if err := brickhouse.Update(db, "testupdate", testData); err != nil {
 		t.Error(err)
 	}
 }
 
 func TestRestore(t *testing.T) {
+	db, err := sqlx.Open(
+		"postgres",
+		"postgresql://postgres:dev@localhost:5432/brickhouse?sslmode=disable")
+	if err != nil {
+		t.Error(err)
+	}
+	defer db.Close()
+
 	targetTimes := map[string]time.Time{}
 	testSets := map[string]map[string]interface{}{
 		"base": {
@@ -81,7 +98,7 @@ func TestRestore(t *testing.T) {
 	}
 
 	for operation, data := range testSets {
-		if err := brickhouse.Update(db, "TestRestore", &data); err != nil {
+		if err := brickhouse.Update(db, "TestRestore", data); err != nil {
 			t.Error(err)
 		}
 		targetTimes[operation] = time.Now()
@@ -91,8 +108,8 @@ func TestRestore(t *testing.T) {
 		if outData, err := brickhouse.Restore(db, "TestRestore", targetTime); err != nil {
 			t.Error(err)
 		} else {
-			if !reflect.DeepEqual(*outData, testSets[operation]) {
-				fmt.Println(*outData)
+			if !reflect.DeepEqual(outData, testSets[operation]) {
+				fmt.Println(outData)
 				fmt.Println(testSets[operation])
 				t.Errorf("restore failed on %s", operation)
 			}

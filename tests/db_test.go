@@ -2,6 +2,7 @@ package tests
 
 import (
 	"fmt"
+	"github.com/jmoiron/sqlx"
 	"reflect"
 	"testing"
 
@@ -10,7 +11,15 @@ import (
 )
 
 func TestEnsure(t *testing.T) {
-	if err := brickhouse.Ensure(db, "test"); err != nil {
+	db, err := sqlx.Open(
+		"postgres",
+		"postgresql://postgres:dev@localhost:5432/brickhouse?sslmode=disable")
+	if err != nil {
+		t.Error(err)
+	}
+	defer db.Close()
+
+	if err := brickhouse.Ensure(db, "testensure"); err != nil {
 		t.Error(err)
 	}
 
@@ -29,6 +38,14 @@ func TestEnsure(t *testing.T) {
 }
 
 func TestRead(t *testing.T) {
+	db, err := sqlx.Open(
+		"postgres",
+		"postgresql://postgres:dev@localhost:5432/brickhouse?sslmode=disable")
+	if err != nil {
+		t.Error(err)
+	}
+	defer db.Close()
+
 	d1 := map[string]interface{}{
 		"1": map[string]interface{}{
 			"a": "foo",
@@ -81,52 +98,52 @@ func TestRead(t *testing.T) {
 		},
 	}
 
-	if err := brickhouse.Write(db, "TestRead", brickhouse.Live, &d1, true); err != nil {
+	if err := brickhouse.Write(db, "testread", brickhouse.Live, d1, true); err != nil {
 		t.Error(err)
 	}
 
-	d1Out, err := brickhouse.Read(db, "TestRead", brickhouse.Live)
+	d1Out, err := brickhouse.Read(db, "testread", brickhouse.Live)
 	if err != nil {
 		t.Error(err)
 	}
 
-	if !reflect.DeepEqual(d1, *d1Out) {
+	if !reflect.DeepEqual(d1, d1Out) {
 		fmt.Println(d1)
-		fmt.Println(*d1Out)
+		fmt.Println(d1Out)
 		t.Error("d1 read failed")
 	} else {
 		t.Log("d1 read succeeded")
 	}
 
-	if err := brickhouse.Write(db, "TestRead", brickhouse.Live, &d2, true); err != nil {
+	if err := brickhouse.Write(db, "testread", brickhouse.Live, d2, true); err != nil {
 		t.Error(err)
 	}
 
-	d2Out, err := brickhouse.Read(db, "TestRead", brickhouse.Live)
+	d2Out, err := brickhouse.Read(db, "testread", brickhouse.Live)
 	if err != nil {
 		t.Error(err)
 	}
 
-	if !reflect.DeepEqual(d2, *d2Out) {
+	if !reflect.DeepEqual(d2, d2Out) {
 		fmt.Println(d2)
-		fmt.Println(*d2Out)
+		fmt.Println(d2Out)
 		t.Error("d2 read failed")
 	} else {
 		t.Log("d2 read succeeded")
 	}
 
-	if err := brickhouse.Write(db, "TestRead", brickhouse.Live, &d3, true); err != nil {
+	if err := brickhouse.Write(db, "testread", brickhouse.Live, d3, true); err != nil {
 		t.Error(err)
 	}
 
-	d3out, err := brickhouse.Read(db, "TestRead", brickhouse.Live)
+	d3out, err := brickhouse.Read(db, "testread", brickhouse.Live)
 	if err != nil {
 		t.Error(err)
 	}
 
-	if !reflect.DeepEqual(d3, *d3out) {
+	if !reflect.DeepEqual(d3, d3out) {
 		fmt.Println(d3)
-		fmt.Println(*d3out)
+		fmt.Println(d3out)
 		t.Error("d3 read failed")
 	} else {
 		t.Log("d3 read succeeded")
@@ -134,6 +151,14 @@ func TestRead(t *testing.T) {
 }
 
 func TestWrite(t *testing.T) {
+	db, err := sqlx.Open(
+		"postgres",
+		"postgresql://postgres:dev@localhost:5432/brickhouse?sslmode=disable")
+	if err != nil {
+		t.Error(err)
+	}
+	defer db.Close()
+
 	d := map[string]interface{}{
 		"1": map[string]interface{}{
 			"a": "foo",
@@ -152,7 +177,7 @@ func TestWrite(t *testing.T) {
 		},
 	}
 
-	if err := brickhouse.Write(db, "TestWrite", brickhouse.Live, &d, true); err != nil {
+	if err := brickhouse.Write(db, "testwrite", brickhouse.Live, d, true); err != nil {
 		t.Error(err)
 	}
 }
