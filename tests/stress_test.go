@@ -3,11 +3,12 @@ package tests
 import (
 	"encoding/csv"
 	"errors"
-	"github.com/jmoiron/sqlx"
-	"github.com/sr-revops/brickhouse"
 	"os"
 	"testing"
 	"time"
+
+	"github.com/jmoiron/sqlx"
+	"github.com/sr-revops/brickhouse"
 )
 
 func TestStressUpdate(t *testing.T) {

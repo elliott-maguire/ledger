@@ -2,10 +2,10 @@ package tests
 
 import (
 	"fmt"
-	"github.com/jmoiron/sqlx"
 	"reflect"
 	"testing"
 
+	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq" // postgres driver
 	"github.com/sr-revops/brickhouse"
 )
