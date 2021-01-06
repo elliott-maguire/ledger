@@ -29,7 +29,7 @@ type Change struct {
 	New       interface{}
 }
 
-// ByTimestamp is a native sort.Interface implementation for sorting by timestamp.
+// ByTimestamp is a sort.Interface implementation for sorting by timestamp.
 type ByTimestamp []Change
 
 func (t ByTimestamp) Len() int           { return len(t) }
@@ -38,7 +38,7 @@ func (t ByTimestamp) Less(i, j int) bool { return t[i].Timestamp.After(t[j].Time
 
 // Map a Change object to a map primitive and return it with an ID.
 func (c Change) Map() (string, map[string]interface{}) {
-	out := map[string]interface{}{}
+	var out map[string]interface{}
 
 	out["keychain"] = c.Keychain
 	out["timestamp"] = c.Timestamp.Format(time.RFC3339Nano)
