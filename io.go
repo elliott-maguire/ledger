@@ -3,6 +3,8 @@ package bricks
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
+	"regexp"
 	"sort"
 	"strconv"
 	"strings"
@@ -11,25 +13,39 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
+var reField = regexp.MustCompile("[^0-9A-Za-z_]")
+var reValue = regexp.MustCompile("['\r\n\t]")
+
 // Update the store with new map[string]interface{}, register changes.
-func Update(db *sqlx.DB, label string, data map[string]interface{}) error {
-	old, err := Read(db, label, Live)
+func Update(db *sqlx.DB, label string, data map[string]map[string]interface{}) error {
+	incoming := make(map[string]interface{})
+	for id, incomingRecord := range data {
+		outRecord := make(map[string]interface{})
+		for inKey, inValue := range incomingRecord {
+			outKey := strings.ToLower(reField.ReplaceAllString(inKey, ""))
+			outValue := fmt.Sprintf("'%s'", reValue.ReplaceAllString(inValue.(string), ""))
+			outRecord[outKey] = outValue
+		}
+		incoming[id] = outRecord
+	}
+
+	existing, err := Read(db, label, Live)
 	if err != nil {
 		return err
 	}
 
-	changes := Compare(old, data)
+	changes := Compare(existing, incoming)
 	if len(changes) > 0 {
 		mappedChanges := make(map[string]interface{})
 		for _, change := range changes {
 			id, mapped := change.Map()
 			mappedChanges[id] = mapped
 		}
-		if err := Write(db, label, Changes, mappedChanges, false); err != nil {
+		if err := Write(db, label, Changes, mappedChanges); err != nil {
 			return err
 		}
 
-		if err := Write(db, label, Live, data, true); err != nil {
+		if err := Write(db, label, Live, incoming); err != nil {
 			return err
 		}
 	}
@@ -112,7 +128,7 @@ func Restore(db *sqlx.DB, label string, target time.Time) (map[string]interface{
 		}
 	}
 
-	if err := Write(db, "TestWrite", Archive, data, true); err != nil {
+	if err := Write(db, label, Archive, data); err != nil {
 		return nil, err
 	}
 
