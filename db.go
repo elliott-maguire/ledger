@@ -96,7 +96,7 @@ func Write(db *sqlx.DB, label string, table Table, data map[string]interface{}) 
 
 		for k, v := range record.(map[string]interface{}) {
 			fields = append(fields, k)
-			values = append(values, fmt.Sprintf("'%s'", reValue.ReplaceAllString(v.(string), "")))
+			values = append(values, fmt.Sprintf("'%s'", v))
 		}
 
 		if _, err := tx.Exec(

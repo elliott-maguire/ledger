@@ -141,7 +141,7 @@ func TestRepeatUpdateFromFile(t *testing.T) {
 	}
 	defer db.Close()
 
-	f, err := os.Open("./temp.csv")
+	f, err := os.Open("./temp.old.csv")
 	if err != nil {
 		t.Error(err)
 	}
@@ -172,6 +172,35 @@ func TestRepeatUpdateFromFile(t *testing.T) {
 
 	if err := bricks.Update(db, label, data); err != nil {
 		t.Error(err)
+	}
+
+	f, err = os.Open("./temp.new.csv")
+	if err != nil {
+		t.Error(err)
+	}
+	defer f.Close()
+
+	reader = csv.NewReader(f)
+	raw, err = reader.ReadAll()
+	if err != nil {
+		t.Error(err)
+	}
+
+	key = "Opportunity ID"
+	keyIndex = 0
+	for i, cell := range raw[0] {
+		if cell == key {
+			keyIndex = i
+		}
+	}
+
+	data = make(map[string]map[string]interface{})
+	for _, row := range raw {
+		record := map[string]interface{}{}
+		for i, cell := range row {
+			record[raw[0][i]] = cell
+		}
+		data[row[keyIndex]] = record
 	}
 
 	if err := bricks.Update(db, label, data); err != nil {
