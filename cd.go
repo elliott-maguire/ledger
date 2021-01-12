@@ -87,7 +87,7 @@ func Compare(old map[string]interface{}, new map[string]interface{}, args ...str
 	for key, value := range old {
 		var keychain string
 		if len(args) > 0 {
-			keychain = args[0] + ":" + key
+			keychain = args[0] + "@" + key
 		} else {
 			keychain = key
 		}
@@ -132,7 +132,7 @@ func Compare(old map[string]interface{}, new map[string]interface{}, args ...str
 	for key, value := range new {
 		var keychain string
 		if len(args) > 0 {
-			keychain = args[0] + ":" + key
+			keychain = args[0] + "@" + key
 		} else {
 			keychain = key
 		}

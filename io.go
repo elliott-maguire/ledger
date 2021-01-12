@@ -82,7 +82,7 @@ func Restore(db *sqlx.DB, label string, target time.Time) (map[string]interface{
 			break
 		}
 
-		keychain := strings.Split(change.Keychain, ":")
+		keychain := strings.Split(change.Keychain, "@")
 		if len(keychain) == 1 {
 			switch change.Operation {
 			case Addition:
