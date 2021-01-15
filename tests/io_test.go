@@ -96,7 +96,7 @@ func TestUpdateFromFile(t *testing.T) {
 	}
 	defer db.Close()
 
-	f, err := os.Open("./temp.csv")
+	f, err := os.Open("./temp.new.csv")
 	if err != nil {
 		t.Error(err)
 	}

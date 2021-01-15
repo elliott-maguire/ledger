@@ -23,7 +23,6 @@ type Table string
 // Live, Archive, Changes ...
 const (
 	Live    Table = "live"
-	Archive Table = "archive"
 	Changes Table = "changes"
 )
 

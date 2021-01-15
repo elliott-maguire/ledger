@@ -127,9 +127,5 @@ func Restore(db *sqlx.DB, label string, target time.Time) (map[string]interface{
 		}
 	}
 
-	if err := Write(db, label, Archive, data); err != nil {
-		return nil, err
-	}
-
 	return data, nil
 }
