@@ -89,14 +89,12 @@ func (c *Change) FromMap(id string, m map[string]interface{}) error {
 	old := m["old"].(string)
 	new := m["new"].(string)
 
-	c = &Change{
-		ID:        id,
-		Keychain:  keychain,
-		Timestamp: timestamp,
-		Operation: Operation(operation),
-		Old:       old,
-		New:       new,
-	}
+	c.ID = id
+	c.Keychain = keychain
+	c.Timestamp = timestamp
+	c.Operation = Operation(operation)
+	c.Old = old
+	c.New = new
 
 	return nil
 }
