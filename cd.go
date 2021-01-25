@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"reflect"
+	"strconv"
 	"time"
 
 	"github.com/google/uuid"
@@ -36,8 +37,8 @@ func (t ByTimestamp) Len() int           { return len(t) }
 func (t ByTimestamp) Swap(i, j int)      { t[i], t[j] = t[j], t[i] }
 func (t ByTimestamp) Less(i, j int) bool { return t[i].Timestamp.After(t[j].Timestamp) }
 
-// Map a Change object to a map primitive and return it with an ID.
-func (c Change) Map() (string, map[string]interface{}) {
+// ToMap converts a Change object to a map
+func (c Change) ToMap() (string, map[string]interface{}) {
 	out := make(map[string]interface{})
 
 	out["keychain"] = c.Keychain
@@ -71,6 +72,33 @@ func (c Change) Map() (string, map[string]interface{}) {
 	}
 
 	return c.ID, out
+}
+
+// FromMap converts a map to a Change object
+func (c *Change) FromMap(id string, m map[string]interface{}) error {
+	keychain := m["keychain"].(string)
+	timestamp, err := time.Parse(time.RFC3339Nano, m["timestamp"].(string))
+	if err != nil {
+		return err
+	}
+	operation, err := strconv.Atoi(m["operation"].(string))
+	if err != nil {
+		return err
+	}
+
+	old := m["old"].(string)
+	new := m["new"].(string)
+
+	c = &Change{
+		ID:        id,
+		Keychain:  keychain,
+		Timestamp: timestamp,
+		Operation: Operation(operation),
+		Old:       old,
+		New:       new,
+	}
+
+	return nil
 }
 
 // Compare two maps recursively and return the changes between them.

@@ -5,7 +5,6 @@ import (
 	"errors"
 	"regexp"
 	"sort"
-	"strconv"
 	"strings"
 	"time"
 
@@ -37,7 +36,7 @@ func Update(db *sqlx.DB, label string, data map[string]map[string]interface{}) e
 	if len(changes) > 0 {
 		mappedChanges := make(map[string]interface{})
 		for _, change := range changes {
-			id, mapped := change.Map()
+			id, mapped := change.ToMap()
 			mappedChanges[id] = mapped
 		}
 		if err := Write(db, label, Changes, mappedChanges); err != nil {
@@ -65,29 +64,8 @@ func Restore(db *sqlx.DB, label string, target time.Time) (map[string]interface{
 	}
 	var changes []Change
 	for k, v := range rawChanges {
-		record := v.(map[string]interface{})
-
-		keychain := record["keychain"].(string)
-		timestamp, err := time.Parse(time.RFC3339Nano, record["timestamp"].(string))
-		if err != nil {
-			return nil, err
-		}
-		operation, err := strconv.Atoi(record["operation"].(string))
-		if err != nil {
-			return nil, err
-		}
-
-		old := record["old"].(string)
-		new := record["new"].(string)
-
-		change := Change{
-			ID:        k,
-			Keychain:  keychain,
-			Timestamp: timestamp,
-			Operation: Operation(operation),
-			Old:       old,
-			New:       new,
-		}
+		var change Change
+		change.FromMap(k, v.(map[string]interface{}))
 		changes = append(changes, change)
 	}
 	sort.Sort(ByTimestamp(changes))
