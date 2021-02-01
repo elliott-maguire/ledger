@@ -3,6 +3,7 @@ package bricks
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"regexp"
 	"sort"
 	"strings"
@@ -20,8 +21,9 @@ func Update(db *sqlx.DB, label string, data map[string]map[string]interface{}) e
 	for id, incomingRecord := range data {
 		outRecord := make(map[string]interface{})
 		for inKey, inValue := range incomingRecord {
-			outKey := strings.ToLower(reField.ReplaceAllString(inKey, ""))
+			outKey := fmt.Sprintf("\"%s\"", strings.ToLower(reField.ReplaceAllString(inKey, "")))
 			outValue := reValue.ReplaceAllString(inValue.(string), "")
+
 			outRecord[outKey] = outValue
 		}
 		incoming[id] = outRecord
