@@ -8,9 +8,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/elliott-maguire/ledger"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/mattn/go-sqlite3"
-	"github.com/sr-revops/bricks"
 )
 
 func TestUpdate(t *testing.T) {
@@ -18,7 +18,7 @@ func TestUpdate(t *testing.T) {
 
 	db, err := sqlx.Open(
 		"postgres",
-		"postgresql://postgres:dev@localhost:5432/bricks?sslmode=disable")
+		"postgresql://postgres:dev@localhost:5432/ledger?sslmode=disable")
 	if err != nil {
 		t.Error(err)
 	}
@@ -42,7 +42,7 @@ func TestUpdate(t *testing.T) {
 		},
 	}
 
-	if err := bricks.Update(db, label, data); err != nil {
+	if err := ledger.Update(db, label, data); err != nil {
 		t.Error(err)
 	}
 }
@@ -52,7 +52,7 @@ func TestRepeatUpdate(t *testing.T) {
 
 	db, err := sqlx.Open(
 		"postgres",
-		"postgresql://postgres:dev@localhost:5432/bricks?sslmode=disable")
+		"postgresql://postgres:dev@localhost:5432/ledger?sslmode=disable")
 	if err != nil {
 		t.Error(err)
 	}
@@ -76,11 +76,11 @@ func TestRepeatUpdate(t *testing.T) {
 		},
 	}
 
-	if err := bricks.Update(db, label, data); err != nil {
+	if err := ledger.Update(db, label, data); err != nil {
 		t.Error(err)
 	}
 
-	if err := bricks.Update(db, label, data); err != nil {
+	if err := ledger.Update(db, label, data); err != nil {
 		t.Error(err)
 	}
 }
@@ -90,7 +90,7 @@ func TestUpdateFromFile(t *testing.T) {
 
 	db, err := sqlx.Open(
 		"postgres",
-		"postgresql://postgres:dev@localhost:5432/bricks?sslmode=disable")
+		"postgresql://postgres:dev@localhost:5432/ledger?sslmode=disable")
 	if err != nil {
 		t.Error(err)
 	}
@@ -125,7 +125,7 @@ func TestUpdateFromFile(t *testing.T) {
 		data[row[keyIndex]] = record
 	}
 
-	if err := bricks.Update(db, label, data); err != nil {
+	if err := ledger.Update(db, label, data); err != nil {
 		t.Error(err)
 	}
 }
@@ -135,7 +135,7 @@ func TestRepeatUpdateFromFile(t *testing.T) {
 
 	db, err := sqlx.Open(
 		"postgres",
-		"postgresql://postgres:dev@localhost:5432/bricks?sslmode=disable")
+		"postgresql://postgres:dev@localhost:5432/ledger?sslmode=disable")
 	if err != nil {
 		t.Error(err)
 	}
@@ -170,7 +170,7 @@ func TestRepeatUpdateFromFile(t *testing.T) {
 		data[row[keyIndex]] = record
 	}
 
-	if err := bricks.Update(db, label, data); err != nil {
+	if err := ledger.Update(db, label, data); err != nil {
 		t.Error(err)
 	}
 
@@ -203,7 +203,7 @@ func TestRepeatUpdateFromFile(t *testing.T) {
 		data[row[keyIndex]] = record
 	}
 
-	if err := bricks.Update(db, label, data); err != nil {
+	if err := ledger.Update(db, label, data); err != nil {
 		t.Error(err)
 	}
 }
@@ -213,7 +213,7 @@ func TestRestore(t *testing.T) {
 
 	db, err := sqlx.Open(
 		"postgres",
-		"postgresql://postgres:dev@localhost:5432/bricks?sslmode=disable")
+		"postgresql://postgres:dev@localhost:5432/ledger?sslmode=disable")
 	if err != nil {
 		t.Error(err)
 	}
@@ -265,14 +265,14 @@ func TestRestore(t *testing.T) {
 	}
 
 	for _, data := range testSets {
-		if err := bricks.Update(db, label, data); err != nil {
+		if err := ledger.Update(db, label, data); err != nil {
 			t.Error(err)
 		}
 		targetTimes = append(targetTimes, time.Now())
 	}
 
 	for i, targetTime := range targetTimes {
-		if outData, err := bricks.Restore(db, label, targetTime); err != nil {
+		if outData, err := ledger.Restore(db, label, targetTime); err != nil {
 			t.Error(err)
 		} else {
 			if !reflect.DeepEqual(outData, testSets[i]) {

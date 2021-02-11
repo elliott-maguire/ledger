@@ -1,4 +1,4 @@
-package bricks
+package ledger
 
 import (
 	"encoding/json"

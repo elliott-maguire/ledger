@@ -3,7 +3,7 @@ package tests
 import (
 	"testing"
 
-	"github.com/sr-revops/bricks"
+	"github.com/elliott-maguire/ledger"
 )
 
 func TestCompare(t *testing.T) {
@@ -52,10 +52,10 @@ func TestCompare(t *testing.T) {
 		},
 	}
 
-	allChanges := make([]bricks.Change, 0)
+	allChanges := make([]ledger.Change, 0)
 	lastData := make(map[string]interface{})
 	for _, data := range testSets {
-		changes := bricks.Compare(lastData, data)
+		changes := ledger.Compare(lastData, data)
 		allChanges = append(allChanges, changes...)
 		lastData = data
 	}

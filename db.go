@@ -1,4 +1,4 @@
-package bricks
+package ledger
 
 import (
 	"fmt"
@@ -45,8 +45,8 @@ func Read(db *sqlx.DB, label string, table Table) (map[string]interface{}, error
 			return nil, err
 		}
 
-		if id, in := record["bricks_id"]; in {
-			delete(record, "bricks_id")
+		if id, in := record["ledger_id"]; in {
+			delete(record, "ledger_id")
 			data[id.(string)] = record
 		}
 	}
@@ -78,7 +78,7 @@ func Write(db *sqlx.DB, label string, table Table, data map[string]interface{}) 
 	}
 
 	if _, err := db.Exec(
-		fmt.Sprintf("CREATE TABLE IF NOT EXISTS %s_%s (bricks_id VARCHAR,%s)", label, table, strings.Join(fields, ",")),
+		fmt.Sprintf("CREATE TABLE IF NOT EXISTS %s_%s (ledger_id VARCHAR,%s)", label, table, strings.Join(fields, ",")),
 	); err != nil {
 		return err
 	}
@@ -100,7 +100,7 @@ func Write(db *sqlx.DB, label string, table Table, data map[string]interface{}) 
 
 		if _, err := tx.Exec(
 			fmt.Sprintf(
-				"INSERT INTO %s_%s (bricks_id,%s) VALUES ('%s',%s)",
+				"INSERT INTO %s_%s (ledger_id,%s) VALUES ('%s',%s)",
 				label, table, strings.Join(fields, ","), id, strings.Join(values, ","),
 			),
 		); err != nil {

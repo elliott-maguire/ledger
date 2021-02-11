@@ -1,4 +1,4 @@
-module github.com/sr-revops/bricks
+module github.com/elliott-maguire/ledger
 
 go 1.15
 

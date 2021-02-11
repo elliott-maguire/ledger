@@ -6,8 +6,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/elliott-maguire/ledger"
 	"github.com/jmoiron/sqlx"
-	"github.com/sr-revops/bricks"
 )
 
 func TestRead(t *testing.T) {
@@ -15,7 +15,7 @@ func TestRead(t *testing.T) {
 
 	db, err := sqlx.Open(
 		"postgres",
-		"postgresql://postgres:dev@localhost:5432/bricks?sslmode=disable")
+		"postgresql://postgres:dev@localhost:5432/ledger?sslmode=disable")
 	if err != nil {
 		t.Error(err)
 	}
@@ -73,11 +73,11 @@ func TestRead(t *testing.T) {
 		},
 	}
 
-	if err := bricks.Write(db, label, bricks.Live, d1); err != nil {
+	if err := ledger.Write(db, label, ledger.Live, d1); err != nil {
 		t.Error(err)
 	}
 
-	d1Out, err := bricks.Read(db, label, bricks.Live)
+	d1Out, err := ledger.Read(db, label, ledger.Live)
 	if err != nil {
 		t.Error(err)
 	}
@@ -90,11 +90,11 @@ func TestRead(t *testing.T) {
 		t.Log("d1 read succeeded")
 	}
 
-	if err := bricks.Write(db, label, bricks.Live, d2); err != nil {
+	if err := ledger.Write(db, label, ledger.Live, d2); err != nil {
 		t.Error(err)
 	}
 
-	d2Out, err := bricks.Read(db, label, bricks.Live)
+	d2Out, err := ledger.Read(db, label, ledger.Live)
 	if err != nil {
 		t.Error(err)
 	}
@@ -107,11 +107,11 @@ func TestRead(t *testing.T) {
 		t.Log("d2 read succeeded")
 	}
 
-	if err := bricks.Write(db, label, bricks.Live, d3); err != nil {
+	if err := ledger.Write(db, label, ledger.Live, d3); err != nil {
 		t.Error(err)
 	}
 
-	d3out, err := bricks.Read(db, label, bricks.Live)
+	d3out, err := ledger.Read(db, label, ledger.Live)
 	if err != nil {
 		t.Error(err)
 	}
@@ -130,7 +130,7 @@ func TestWrite(t *testing.T) {
 
 	db, err := sqlx.Open(
 		"postgres",
-		"postgresql://postgres:dev@localhost:5432/bricks?sslmode=disable")
+		"postgresql://postgres:dev@localhost:5432/ledger?sslmode=disable")
 	if err != nil {
 		t.Error(err)
 	}
@@ -154,7 +154,7 @@ func TestWrite(t *testing.T) {
 		},
 	}
 
-	if err := bricks.Write(db, label, bricks.Live, d); err != nil {
+	if err := ledger.Write(db, label, ledger.Live, d); err != nil {
 		t.Error(err)
 	}
 }
