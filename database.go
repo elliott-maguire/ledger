@@ -73,8 +73,8 @@ func Update(db *sqlx.DB, label string, input map[string]interface{}) error {
 	return nil
 }
 
-// Restore the `archive` table to a given time.
-func Restore(db *sqlx.DB, label string, target time.Time) (map[string]interface{}, error) {
+// Recompose a historical snapshot of the given table at the given time.
+func Recompose(db *sqlx.DB, label string, target time.Time) (map[string]interface{}, error) {
 	lastInput, err := Read(db, label, Cache)
 	if err != nil {
 		return nil, err

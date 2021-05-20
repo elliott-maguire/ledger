@@ -1,26 +1,36 @@
-# ledger
-
-ledger is a tool for storing and keeping histories of flat, two-dimensional data sets. It maintains a linear, atomic, granular change history that can be traversed to reconstruct any available past version of the given data set. Changes in data are tracked down to the cell level allowing for flexibility with constantly-changing schema.
+# Ledger
 
     go get github.com/elliott-maguire/ledger
 
-## How does it work?
+## Overview
 
-### Database Architecture
+This is an experiment in efficient auditing on two-dimensional datasets. It relies primarily on a semi-recursive change detection algorithm that produces a linear record of atomic changes for both rows and cells within a table. In the current iteration, this linear record is stored in a table adjacent to the "live" data (i.e. the most up-to-date copy).
 
-ledger automatically maintains a database architecture for the data that comes in. It is required that a label for the data be passed, and that label is used to create a schema under which three tables exist: `live`, where the most up-to-date copy of the data lives, `changes`, where the change list lives, and `archive` where restored data is written temporarily.
+## Project Status
+
+Ledger still has a significant amount of issues and inefficiencies, and is not suitable for a production environment. The primary focus of development at this time is reducing memory overhead during table recomposition. I am also experimenting with implementations in other languages in an attempt to observe both advantages in the cleanliness of implementations and the overhead that other languages might incur/reduce.
+
+## Architecture
+
+### Database
+
+The API requires `sqlx.DB` pointers in its function signatures so that the system can automatically maintain the following table structure:
+
+1. A table for live/up-to-date data
+2. A table for keeping the linear record
+3. A table for caching inputs
 
 ### Input and Change Detection
 
 Once new data comes in, ledger compares it to the existing data and tracks every change between the two datasets down to the cell. Those changes are then written to the `changes` table. The `live` table is then overwritten with the incoming data.
 
-### Restoration
+### Recomposition
 
-Given a valid `time.Time` object, ledger will iterate over the change list in reverse and re-create the data as it stood at the given time. It will write that restored data set to the `archive` table, and return a copy of the data.
+Given a valid `time.Time` object, the `Recompose` will iterate over the change list in reverse and recompose the data, producing a copy of the data to the nearest accuracy.
 
-## How is it used?
+## Usage
 
-The only two functions that need to be called are `Update` and `Restore`. These write new data and restore old data, respectively. All you need to have is a pointer to a `sqlx.DB` connection and some properly-formatted data.
+The only two functions that need to be called are `Update` and `Recompose`. These write new data and restore old data, respectively. All you need to have is a pointer to a `sqlx.DB` connection and some properly-formatted data.
 
 ```go
 db, err := sqlx.Open("postgres", "postgresql://localhost:5432/mydb")
@@ -40,11 +50,11 @@ data := map[string]interface{}{
     },
 }
 
-if err := ledger.Update(db, "testupdate", data); err != nil { panic(err) }
+if err := ledger.Update(db, "test", data); err != nil { panic(err) }
 ```
 
-And if the data were to change:
+And to produce a previous version:
 
 ```go
-restored, err := ledger.Restore(); err != nil { panic(err) }
+restored, err := ledger.Recompose(); err != nil { panic(err) }
 ```
